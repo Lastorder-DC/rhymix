@@ -1,7 +1,7 @@
 name: PHP Lint & Run codeception
 on:
   push:
-    branches: [ master, develop ]
+    branches: [ master, develop, php8 ]
   pull_request:
     branches: [ develop ]
 
@@ -21,6 +21,10 @@ jobs:
       with:
         php-version: ${{ matrix.php }}
     
+    - name: Install extensions
+      if: matrix.php == '8.0'
+      run: sudo apt-get install php8.0-curl php8.0-mbstring php8.0-zip
+    
     - name: Start MySQL
       run: sudo systemctl start mysql.service
     
@@ -31,7 +35,12 @@ jobs:
       run: mysql -uroot -proot -e "create user 'travis'@'localhost' identified by 'travis'; FLUSH PRIVILEGES" && mysql -uroot -proot -e "GRANT ALL PRIVILEGES ON rhymix.* TO travis@localhost"
     
     - name: Download codeception
+      if: matrix.php != '8.0'
       run: wget https://codeception.com/releases/2.3.9/codecept.phar
+    
+    - name: Download codeception
+      if: matrix.php == '8.0'
+      run: wget https://codeception.com/codecept.phar
     
     - name: Run PHP development server
       run: php -S localhost:8000 &

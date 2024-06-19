@@ -1877,12 +1877,13 @@ class DocumentController extends Document
 		// Check if document's author is a member.
 		if($oDocument->get('member_srl'))
 		{
-			// Pass after registering a session if author's information is same as the currently logged-in user's.
+			/* Pass after registering a session if author's information is same as the currently logged-in user's.
 			if($member_srl && $member_srl == abs($oDocument->get('member_srl')))
 			{
 				$_SESSION['voted_document'][$document_srl] = false;
 				return new BaseObject(-1, $failed_voted . '_self');
 			}
+			*/
 		}
 
 		// Use member_srl for logged-in members and IP address for non-members.

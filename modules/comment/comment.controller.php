@@ -1612,12 +1612,13 @@ class CommentController extends Comment
 		// if the comment author is a member
 		if($oComment->get('member_srl'))
 		{
-			// session registered if the author information matches to the current logged-in user's.
+			/* session registered if the author information matches to the current logged-in user's.
 			if($member_srl && $member_srl == abs($oComment->get('member_srl')))
 			{
 				$_SESSION['voted_comment'][$comment_srl] = false;
 				return new BaseObject(-1, $failed_voted . '_self');
 			}
+			*/
 		}
 
 		// If logged-in, use the member_srl. otherwise use the ipaddress.

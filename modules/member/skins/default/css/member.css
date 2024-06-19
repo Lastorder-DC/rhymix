@@ -179,9 +179,9 @@
 .xm .control-group{margin-bottom:10px}
 /* Tabs */
 .xm .nav{margin:0 0 20px 0;padding:0;list-style:none}
-.xm .nav>li>a{display:block}
+.xm .nav>li>a{display:block; color: var(--color-black); transition: ease .2s;}
 .xm .nav>li>a:hover,
-.xm .nav>li>a:focus{text-decoration:none;background-color:#eeeeee}
+.xm .nav>li>a:focus{text-decoration:none;background-color:#eeeeee; color: var(--color-white)}
 .xm .nav-tabs{*zoom:1}
 .xm .nav-tabs:before,
 .xm .nav-tabs:after{display:table;line-height:0;content:""}

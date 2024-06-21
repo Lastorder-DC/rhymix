@@ -917,11 +917,6 @@ class MemberView extends Member
 	 */
 	function dispMemberFindAccount()
 	{
-		if(Context::get('is_logged'))
-		{
-			throw new Rhymix\Framework\Exception('already_logged');
-		}
-
 		if (!$this->checkMidAndRedirect())
 		{
 			return;

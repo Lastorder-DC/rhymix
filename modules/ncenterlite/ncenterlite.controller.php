@@ -8,6 +8,7 @@ class NcenterliteController extends Ncenterlite
 	public static $_skip_acts = array(
 		'dispNcenterliteNotifyList' => true,
 		'dispEditorFrame' => true,
+		'dispEditorPopup' => true
 	);
 
 	/**

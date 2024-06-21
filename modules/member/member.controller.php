@@ -1239,10 +1239,6 @@ class MemberController extends Member
 	{
 		$config = MemberModel::getMemberConfig();
 		$vars = Context::getRequestVars();
-		if ($this->user->member_srl)
-		{
-			throw new Rhymix\Framework\Exception('already_logged');
-		}
 
 		// Check auth_key
 		if (empty($vars->auth_key))

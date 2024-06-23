@@ -265,7 +265,7 @@ class NcenterliteModel extends Ncenterlite
 
 		if($disp)
 		{
-			$output = $this->getMyDispNotifyList($member_srl);
+			$output = $this->getMyDispNotifyList($member_srl, $readed);
 		}
 		else
 		{
@@ -434,7 +434,7 @@ class NcenterliteModel extends Ncenterlite
 		return $output;
 	}
 
-	function getMyDispNotifyList($member_srl = null)
+	function getMyDispNotifyList($member_srl = null, $readed = 'N')
 	{
 		if(!$member_srl)
 		{
@@ -447,6 +447,10 @@ class NcenterliteModel extends Ncenterlite
 		$args->list_count = '20';
 		$args->page_count = '10';
 		$args->member_srl = $member_srl;
+		if ($readed)
+		{
+			$args->readed = $readed;
+		}
 		$output = executeQueryArray('ncenterlite.getDispNotifyList', $args);
 		if(!$output->data) $output->data = array();
 

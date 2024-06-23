@@ -9,6 +9,7 @@
 
 	<conditions>
 		<condition operation="equal" column="member_srl" var="member_srl" filter="number" notnull="notnull" />
+		<condition operation="equal" column="readed" var="readed" pipe="and" />
 	</conditions>
 
 	<navigation>

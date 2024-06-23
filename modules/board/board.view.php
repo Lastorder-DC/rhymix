@@ -500,7 +500,7 @@ class BoardView extends Board
 		$args->page = intval(Context::get('page')) ?: null;
 		$args->list_count = $this->list_count;
 		$args->page_count = $this->page_count;
-		if(Context::get('v_mode') == 'recommended') $args->s_voted_count = 5;
+		if(Context::get('v_mode') == 'recommended') $args->s_voted_count = 10;
 		if (isset($this->module_info->include_days) && $this->module_info->include_days > 0)
 		{
 			$args->start_regdate = date('YmdHis', time() - ($this->module_info->include_days * 86400));

@@ -1426,6 +1426,10 @@ class DocumentModel extends Document
 		$args->s_is_notice = ($searchOpt->except_notice ?? false) ? 'N' : null;
 		$args->statusList = $searchOpt->statusList ?? array(self::getConfigStatus('public'), self::getConfigStatus('secret'));
 		$args->columnList = $searchOpt->columnList ?? array();
+		if (isset($searchOpt->s_voted_count) && $searchOpt->s_voted_count > 0)
+		{
+			$args->s_voted_count = intval($searchOpt->s_voted_count);
+		}
 
 		// get directly module_srl by mid
 		if(isset($searchOpt->mid) && $searchOpt->mid)

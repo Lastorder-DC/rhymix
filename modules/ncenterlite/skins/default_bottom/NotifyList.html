@@ -1,4 +1,12 @@
 <include target="../../../member/skins/default/common_header.html" />
+<ul class="nav nav-tabs">
+	<li class="active"|cond="!$readed || $readed == 'N'">
+		<a href="{getUrl('readed', '')}">안읽은 알림</a>
+	</li>
+	<li class="active"|cond="$readed == 'Y'">
+		<a href="{getUrl('readed', 'Y')}">전체 알림</a>
+	</li>
+</ul>
 <table class="table table-striped table-hover" style="margin-top:20px;">
 	<thead class="bg_f_f9">
 		<tr>

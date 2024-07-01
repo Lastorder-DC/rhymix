@@ -40,6 +40,7 @@ class NcenterliteController extends Ncenterlite
 
 		if (is_object($message))
 		{
+			$args->target_summary = $message->summary ?? '';
 			$args->target_body = $message->subject ?? '';
 			$args->target_url = empty($message->url) ? $args->target_url : $message->url;
 			$args->extra_content = $message->content ?? '';

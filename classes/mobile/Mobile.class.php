@@ -14,6 +14,12 @@ class Mobile
 	protected static $_ismobile = null;
 
 	/**
+	 * Whether mobile or not mobile mode
+	 * @var bool
+	 */
+	protected static $_ismobilereally = null;
+
+	/**
 	 * Get instance of Mobile class
 	 *
 	 * @return Mobile
@@ -76,6 +82,55 @@ class Mobile
 		}
 
 		return self::$_ismobile;
+	}
+
+	/**
+	 * Get current mobile mode
+	 *
+	 * @return bool
+	 */
+	public static function isReallyFromMobilePhone()
+	{
+		// Return cached result.
+		if (self::$_ismobilereally !== null)
+		{
+			return self::$_ismobilereally;
+		}
+
+		// Try to detect from URL arguments and cookies, and finally fall back to user-agent detection.
+		$m = Context::get('m');
+		$cookie = isset($_COOKIE['rx_uatype']) ? $_COOKIE['rx_uatype'] : null;
+		$uahash = base64_encode_urlsafe(md5($_SERVER['HTTP_USER_AGENT'] ?? '', true));
+		if (strncmp($cookie ?? '', $uahash . ':', strlen($uahash) + 1) !== 0)
+		{
+			$cookie = null;
+		}
+		elseif ($m === null)
+		{
+			$m = substr($cookie, -1);
+		}
+
+		if ($m === '1')
+		{
+			self::$_ismobilereally = TRUE;
+		}
+		elseif ($m === '0')
+		{
+			self::$_ismobilereally = FALSE;
+		}
+		else
+		{
+			self::$_ismobilereally = Rhymix\Framework\UA::isMobile() && (config('mobile.tablets') || !Rhymix\Framework\UA::isTablet());
+		}
+
+		// Set cookie to prevent recalculation.
+		$uatype = $uahash . ':' . (self::$_ismobilereally ? '1' : '0');
+		if ($cookie !== $uatype)
+		{
+			Rhymix\Framework\Cookie::set('rx_uatype', $uatype, ['expires' => 0, 'path' => \RX_BASEURL]);
+		}
+
+		return self::$_ismobilereally;
 	}
 
 	/**

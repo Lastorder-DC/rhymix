@@ -66,13 +66,13 @@ class Navercloudmail extends Base implements \Rhymix\Framework\Drivers\MailInter
 	 * @return string
 	 */
 	private static function _makeSignature($timestamp, $accessKey, $secretKey) {
-		$space = " ";  // 공백
-		$newLine = "\n";  // 줄바꿈
-		$method = "POST";  // HTTP 메소드
-		$uri= "/api/v1/mails";  // 도메인을 제외한 "/" 아래 전체 url (쿼리스트링 포함)
-		$timestamp = $timestamp;  // 현재 타임스탬프 (epoch, millisecond)
-		$accessKey = $accessKey;  // access key id (from portal or sub account)
-		$secretKey = $secretKey;  // secret key (from portal or sub account)
+		$space = " ";
+		$newLine = "\n";
+		$method = "POST";
+		$uri= "/api/v1/mails";
+		$timestamp = $timestamp;
+		$accessKey = $accessKey;
+		$secretKey = $secretKey;
 	
 		$hmac = $method.$space.$uri.$newLine.$timestamp.$newLine.$accessKey;
 		$signautue = base64_encode(hash_hmac('sha256', $hmac, $secretKey,true));
@@ -160,43 +160,22 @@ class Navercloudmail extends Base implements \Rhymix\Framework\Drivers\MailInter
 		try
 		{
 			$request = \Rhymix\Framework\HTTP::post(self::$_url . "/mails", $data, $headers, [], ['timeout' => self::$_timeout]);
-			$result = $request->getBody()->getContents();
+			$result = @json_decode($request->getBody()->getContents());
 		}
 		catch (\Requests_Exception $e)
 		{
-			$message->errors[] = 'Navercloudmail: ' . $e->getMessage();
+			$message->errors[] = 'Navercloudmail: Request error: ' . $e->getMessage();
 			return false;
 		}
 
-		// TODO: proper parsing of body
-		debugPrint($result);
-		return true;
-		/*
-		if (!$result)
+		if (isset($result->error))
 		{
-			$message->errors[] = 'Navercloudmail: Server error: ' . $request->body;
+			$message->errors[] = 'Navercloudmail: ' . $result->error . PHP_EOL . $result->details;
 			return false;
-		}
-		elseif($result->result === 'OK')
-		{
-			return true;
 		}
 		else
 		{
-			if(isset($result->error_msg))
-			{
-				if(isset(self::$_error_codes[$result->error_msg]))
-				{
-					$result->error_msg .= ' ' . self::$_error_codes[$result->error_msg];
-				}
-				$message->errors[] = 'Woorimail: ' . $result->error_msg;
-			}
-			else
-			{
-				$message->errors[] = 'Woorimail: Connection error';
-			}
-			return false;
+			return true;
 		}
-		*/
 	}
 }

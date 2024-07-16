@@ -213,7 +213,7 @@
 .xm .table thead:first-child tr:first-child td{border-top:0}
 .xm .table tbody+tbody{border-top:2px solid #dddddd}
 .xm .table-striped tbody>tr:nth-child(odd)>td,
-.xm .table-striped tbody>tr:nth-child(odd)>th{background-color:var(--color-gray-300); transition: ease .2s;}
+.xm .table-striped tbody>tr:nth-child(odd)>th{background-color:var(--color-gray-100); transition: ease .2s;}
 .xm .table-hover tbody tr:hover>td,
 .xm .table-hover tbody tr:hover>th{background-color:var(--color-gray-050);}
 /* Pangination */
@@ -280,9 +280,9 @@
 .xm .signin .submit{position:absolute;top:0;right:0}
 .xm .signin #warning{margin-right:-14px}
 .xm .signin #warning>p{margin:10px 0}
-.xm .agreement{border:1px solid #ddd;padding:15px 15px 10px 15px;border-radius:5px;background:#f8f8f8;margin-bottom:15px}
-.xm .agreement>.title{padding: 0 0 10px 0;margin:0 0 10px 0;border-bottom:1px dotted #ccc; font-size:16px;font-weight:bold}
+.xm .agreement{border:1px solid var(--color-gray-900);padding:15px 15px 10px 15px;border-radius:5px;background:var(--color-gray-050);margin-bottom:15px}
+.xm .agreement>.title{padding: 0 0 10px 0;margin:0 0 10px 0;border-bottom:1px dotted var(--color-gray-900); font-size:16px;font-weight:bold}
 .xm .agreement>.text{max-height:200px;overflow:auto}
-.xm .agreement>.confirm{padding:10px 0 0 0;margin:10px 0 0 0;border-top:1px dotted #ccc}
+.xm .agreement>.confirm{padding:10px 0 0 0;margin:10px 0 0 0;border-top:1px dotted var(--color-gray-900);}
 @media all and (max-width:480px){.xm .signin{margin:0;width:100%}}
 @media all and (min-width:768px){.xm .dl-horizontal>dt{margin-bottom:10px}}

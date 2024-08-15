@@ -716,9 +716,16 @@ class BoardView extends Board
 		}
 
 		$obj = new stdClass;
-		$obj->mid = $this->module_info->mid;
+		if (empty($this->include_modules))
+		{
+			$obj->module_srl = $this->module_info->module_srl;
+		}
+		else
+		{
+			$obj->module_srl = $this->include_modules;
+		}
 		$obj->list_count = 10000;
-		$output = TagModel::getInstance()->getTagList($obj);
+		$output = TagModel::getTagList($obj);
 
 		// automatically order
 		if(count($output->data))

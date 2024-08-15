@@ -249,7 +249,18 @@ class LayoutModel extends Layout
 			$path = $pathPrefix . $layout;
 		}
 
-		return is_readable($path . '/layout.html');
+		if (file_exists($path . '/layout.html') && is_readable($path . '/layout.html'))
+		{
+			return true;
+		}
+		elseif (file_exists($path . '/layout.blade.php') && is_readable($path . '/layout.blade.php'))
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		}
 	}
 
 	/**
@@ -539,6 +550,7 @@ class LayoutModel extends Layout
 
 		if(file_exists($cache_file) && filemtime($cache_file) > filemtime($xml_file))
 		{
+			$layout_info = new stdClass;
 			include($cache_file);
 
 			if($layout_info->extra_var && $vars)

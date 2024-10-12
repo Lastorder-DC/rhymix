@@ -773,9 +773,10 @@ class Context
 		}
 		if (count($vars))
 		{
-			$title = trim(trim(preg_replace_callback('/\\$(\w+)/', function($matches) use($vars) {
+			$title = trim(preg_replace_callback('/\\$(\w+)/', function($matches) use($vars) {
 				return isset($vars[strtolower($matches[1])]) ? $vars[strtolower($matches[1])] : $matches[0];
-			}, $title), ' -'));
+			}, $title));
+			$title = preg_replace('/(-\s+)+-/', '-', trim($title, ' -'));
 		}
 		self::$_instance->browser_title = $title;
 	}
@@ -1368,7 +1369,9 @@ class Context
 					$file['tmp_name'] = $val['tmp_name'][$i];
 					$file['error'] = $val['error'][$i];
 					$file['size'] = $val['size'][$i];
-					$files[] = $file;
+
+					$subkey = (is_int($i) || ctype_digit($i)) ? intval($i) : preg_replace('/[^a-z0-9:+=_-]/i', '', (string)$i);
+					$files[$subkey] = $file;
 				}
 				if(count($files))
 				{

@@ -32,7 +32,7 @@ class FileModel extends File
 		// Get uploaded files
 		if($upload_target_srl)
 		{
-			if (!$upload_target_type || $upload_target_type === 'document')
+			if (!$upload_target_type || $upload_target_type === 'doc' || $upload_target_type === 'document')
 			{
 				$oDocument = DocumentModel::getDocument($upload_target_srl);
 			}
@@ -44,7 +44,7 @@ class FileModel extends File
 			// Check permissions of the comment
 			if(!$oDocument || !$oDocument->isExists())
 			{
-				if (!$upload_target_type || $upload_target_type === 'comment')
+				if (!$upload_target_type || $upload_target_type === 'com' || $upload_target_type === 'comment')
 				{
 					$oComment = CommentModel::getComment($upload_target_srl);
 					if($oComment->isExists())
@@ -81,7 +81,9 @@ class FileModel extends File
 			}
 
 			// Set file list
-			foreach(self::getFiles($upload_target_srl) as $file_info)
+			$filter_type = $_SESSION['upload_info'][$editor_sequence]->upload_target_type ?? null;
+			$files = self::getFiles($upload_target_srl, [], 'file_srl', false, $filter_type);
+			foreach ($files as $file_info)
 			{
 				$obj = new stdClass;
 				$obj->file_srl = $file_info->file_srl;
@@ -208,7 +210,7 @@ class FileModel extends File
 
 	/**
 	 * Check if the file is indexable
-	 * @param object $filename
+	 * @param string $filename
 	 * @param object $file_module_config
 	 * @return bool
 	 */
@@ -288,12 +290,17 @@ class FileModel extends File
 	 * Return number of attachments which belongs to a specific document
 	 *
 	 * @param int $upload_target_srl The sequence to get a number of files
+	 * @param ?string $upload_target_type
 	 * @return int Returns a number of files
 	 */
-	public static function getFilesCount($upload_target_srl)
+	public static function getFilesCount($upload_target_srl, $upload_target_type = null)
 	{
 		$args = new stdClass();
 		$args->upload_target_srl = $upload_target_srl;
+		if ($upload_target_type)
+		{
+			$args->upload_target_type = $upload_target_type;
+		}
 		$output = executeQuery('file.getFilesCount', $args);
 		return (int)$output->data->count;
 	}
@@ -430,12 +437,20 @@ class FileModel extends File
 	 * @param string $sortIndex The column that used as sort index
 	 * @return array Returns array of object that contains file information. If no result returns null.
 	 */
-	public static function getFiles($upload_target_srl, $columnList = array(), $sortIndex = 'file_srl', $ckValid = false)
+	public static function getFiles($upload_target_srl, $columnList = array(), $sortIndex = 'file_srl', $valid_files_only = false, $upload_target_type = null)
 	{
 		$args = new stdClass();
 		$args->upload_target_srl = $upload_target_srl;
 		$args->sort_index = $sortIndex;
-		if($ckValid) $args->isvalid = 'Y';
+		if ($valid_files_only)
+		{
+			$args->isvalid = 'Y';
+		}
+		if ($upload_target_type)
+		{
+			$args->upload_target_type = $upload_target_type;
+		}
+
 		$output = executeQueryArray('file.getFiles', $args, $columnList);
 		if(!$output->data)
 		{
@@ -457,9 +472,12 @@ class FileModel extends File
 	 *
 	 * @return object Returns a file configuration of current module. If user is admin, returns PHP's max file size and allow all file types.
 	 */
-	public static function getUploadConfig()
+	public static function getUploadConfig($module_srl = 0)
 	{
-		$module_srl = Context::get('module_srl') ?: (Context::get('current_module_info')->module_srl ?? 0);
+		if (!$module_srl)
+		{
+			$module_srl = Context::get('module_srl') ?: (Context::get('current_module_info')->module_srl ?? 0);
+		}
 		$config = self::getFileConfig($module_srl);
 		if (Rhymix\Framework\Session::isAdmin())
 		{

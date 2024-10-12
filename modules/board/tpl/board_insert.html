@@ -246,7 +246,7 @@
 				<input type="number" min="1" name="skip_bottom_list_days" value="{$module_info->skip_bottom_list_days ?: 30}" /> {$lang->unit_day}
 				<br />
 				<label for="skip_bottom_list_for_robot">
-					<input type="checkbox" name="skip_bottom_list_for_robot" id="skip_bottom_list_for_robot" value="Y" checked="checked"|cond="$module_info->skip_bottom_list_for_robot === 'Y'" />
+					<input type="checkbox" name="skip_bottom_list_for_robot" id="skip_bottom_list_for_robot" value="Y" checked="checked"|cond="$module_info->skip_bottom_list_for_robot !== 'N'" />
 					{$lang->skip_bottom_list_for_robot}
 				</label>
 				<p class="x_help-block">{$lang->about_customize_bottom_list}</p>
@@ -290,9 +290,17 @@
 			</div>
 		</div>
 		<div class="x_control-group">
+			<label class="x_control-label">{$lang->inline_data_url_limit}</label>
+			<div class="x_controls">
+				<input type="number" min="1" name="inline_data_url_limit" id="inline_data_url_limit" value="{$module_info->inline_data_url_limit ?: 64}" /> KB
+				<p class="x_help-block">{$lang->about_inline_data_url_limit}</p>
+			</div>
+		</div>
+		<div class="x_control-group">
 			<label class="x_control-label">{$lang->consultation}</label>
 			<div class="x_controls">
-				<label class="x_inline" for="consultation"><input type="checkbox" name="consultation" id="consultation" value="Y" checked="checked"|cond="$module_info->consultation == 'Y'" /> {$lang->about_consultation}</label>
+				<label class="x_inline" for="consultation"><input type="checkbox" name="consultation" id="consultation" value="Y" checked="checked"|cond="$module_info->consultation == 'Y'" /> {$lang->use_consultation}</label>
+				<p class="x_help-block">{$lang->about_consultation}</p>
 			</div>
 		</div>
 		<div class="x_control-group">

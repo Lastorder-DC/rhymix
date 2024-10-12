@@ -2575,7 +2575,7 @@ class MemberController extends Member
 			}
 			else
 			{
-				$refused_reason = $member_info->refused_reason ? ('<br>' . lang('refused_reason') . ': ' . $member_info->refused_reason) : '';
+				$refused_reason = $member_info->refused_reason ? ("\n" . lang('refused_reason') . ': ' . $member_info->refused_reason) : '';
 				return new BaseObject(-1, lang('msg_user_denied') . $refused_reason);
 			}
 		}
@@ -2583,7 +2583,7 @@ class MemberController extends Member
 		// Notify if user is limited
 		if($member_info->limit_date && substr($member_info->limit_date,0,8) >= date("Ymd"))
 		{
-			$limited_reason = $member_info->limited_reason ? ('<br>' . lang('refused_reason') . ': ' . $member_info->limited_reason) : '';
+			$limited_reason = $member_info->limited_reason ? ("\n" . lang('refused_reason') . ': ' . $member_info->limited_reason) : '';
 			return new BaseObject(-9, sprintf(lang('msg_user_limited'), zdate($member_info->limit_date,"Y-m-d")) . $limited_reason);
 		}
 

@@ -735,6 +735,17 @@ class CommentController extends Comment
 			$list_args->head = $parent->head;
 			$list_args->depth = $parent->depth + 1;
 
+			// Check max thread depth.
+			$comment_config = ModuleModel::getModulePartConfig('comment', $obj->module_srl);
+			if (isset($comment_config->max_thread_depth) && $comment_config->max_thread_depth > 0)
+			{
+				if ($list_args->depth + 1 > $comment_config->max_thread_depth)
+				{
+					$oDB->rollback();
+					return new BaseObject(-1, 'msg_exceeds_max_thread_depth');
+				}
+			}
+
 			// if the depth of comments is less than 2, execute insert.
 			if($list_args->depth < 2)
 			{
@@ -1554,23 +1565,23 @@ class CommentController extends Comment
 
 	/**
 	 * delete declared comment, log
-	 * @param array|string $commentSrls : srls string (ex: 1, 2,56, 88)
+	 * @param object $args should contain comment_srl
 	 * @return void
 	 */
-	function _deleteDeclaredComments($commentSrls)
+	function _deleteDeclaredComments($args)
 	{
-		executeQuery('comment.deleteDeclaredComments', $commentSrls);
-		executeQuery('comment.deleteCommentDeclaredLog', $commentSrls);
+		executeQuery('comment.deleteDeclaredComments', $args);
+		executeQuery('comment.deleteDeclaredCommentLog', $args);
 	}
 
 	/**
 	 * delete voted comment log
-	 * @param array|string $commentSrls : srls string (ex: 1, 2,56, 88)
+	 * @param object $args should contain comment_srl
 	 * @return void
 	 */
-	function _deleteVotedComments($commentSrls)
+	function _deleteVotedComments($args)
 	{
-		executeQuery('comment.deleteCommentVotedLog', $commentSrls);
+		executeQuery('comment.deleteCommentVotedLog', $args);
 	}
 
 	/**
@@ -2042,6 +2053,7 @@ class CommentController extends Comment
 		{
 			$comment_config->comment_page_count = 10;
 		}
+		$comment_config->max_thread_depth = (int)Context::get('max_thread_depth') ?: 0;
 
 		$comment_config->default_page = Context::get('default_page');
 		if($comment_config->default_page !== 'first')

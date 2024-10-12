@@ -200,6 +200,12 @@ class BoardView extends Board
 		// list
 		$this->dispBoardContentList();
 
+		// Board features
+		$oDocument = Context::get('oDocument');
+		$document_module_srl = ($oDocument && $oDocument->isExists()) ? $oDocument->get('module_srl') : $this->module_srl;
+		$board_features = Rhymix\Modules\Board\Models\Features::fromModuleInfo($this->module_info, $document_module_srl);
+		Context::set('board_features', $board_features);
+
 		/**
 		 * add javascript filters
 		 **/
@@ -226,7 +232,23 @@ class BoardView extends Board
 				return;
 			}
 
-			Context::set('category_list', DocumentModel::getCategoryList($this->module_srl));
+			// Get category list for documents belong to other modules. (i.e. submodule in combined board)
+			if (empty($this->include_modules))
+			{
+				$category_list = DocumentModel::getCategoryList($this->module_srl);
+			}
+			else
+			{
+				$category_list = DocumentModel::getCategoryList($this->module_srl);
+				foreach ($this->include_modules as $module_srl)
+				{
+					if ($module_srl != $this->module_srl)
+					{
+						$category_list += DocumentModel::getCategoryList($module_srl);
+					}
+				}
+			}
+			Context::set('category_list', $category_list);
 
 			$oSecurity = new Security();
 			$oSecurity->encodeHTML('category_list.', 'category_list.childs.');
@@ -323,11 +345,13 @@ class BoardView extends Board
 				Context::setCanonicalURL($oDocument->getPermanentUrl());
 				$seo_title = config('seo.document_title') ?: '$SITE_TITLE - $DOCUMENT_TITLE';
 				$seo_title = Context::replaceUserLang($seo_title);
+				$category_list = Context::get('category_list');
 				Context::setBrowserTitle($seo_title, array(
 					'site_title' => Context::getSiteTitle(),
 					'site_subtitle' => Context::getSiteSubtitle(),
 					'subpage_title' => $this->module_info->browser_title,
 					'document_title' => $oDocument->getTitleText(),
+					'category' => ($oDocument->get('category_srl') && isset($category_list[$oDocument->get('category_srl')])) ? $category_list[$oDocument->get('category_srl')]->title : '',
 					'page' => Context::get('page') ?: 1,
 				));
 
@@ -548,7 +572,7 @@ class BoardView extends Board
 
 		// set the current page of documents
 		$document_srl = Context::get('document_srl');
-		if($document_srl && $this->module_info->skip_bottom_list_for_robot === 'Y' && isCrawler())
+		if($document_srl && $this->module_info->skip_bottom_list_for_robot !== 'N' && isCrawler())
 		{
 			Context::set('page', $args->page = null);
 		}
@@ -1124,6 +1148,17 @@ class BoardView extends Board
 		if(Context::get('document_srl') && $oSourceComment->get('document_srl') != Context::get('document_srl'))
 		{
 			return $this->dispBoardMessage('msg_not_founded', 404);
+		}
+
+		// Check thread depth
+		$comment_config = ModuleModel::getModulePartConfig('comment', $this->module_srl);
+		if (isset($comment_config->max_thread_depth) && $comment_config->max_thread_depth > 0)
+		{
+			$parent_depth = CommentModel::getCommentDepth($parent_srl);
+			if ($parent_depth + 2 > $comment_config->max_thread_depth)
+			{
+				return $this->dispBoardMessage('msg_exceeds_max_thread_depth');
+			}
 		}
 
 		// Check allow comment

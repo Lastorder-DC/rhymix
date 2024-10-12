@@ -214,11 +214,13 @@
 		var url = XE.URI(request_uri).pathname();
 		var action_parts = action.split('.');
 		var request_info;
-		if (action === 'raw') {
+
+		if (params instanceof FormData) {
+			request_info = (params.get('module') || params.get('mid')) + '.' + params.get('act');
+		} else if (action === 'raw') {
 			request_info = 'RAW FORM SUBMISSION';
 		} else {
 			params = params ? ($.isArray(params) ? arr2obj(params) : params) : {};
-			//if (action_parts.length != 2) return;
 			params.module = action_parts[0];
 			params.act = action_parts[1];
 			request_info = params.module + "." + params.act;
@@ -342,7 +344,7 @@
 
 		// Send the AJAX request.
 		try {
-			$.ajax({
+			var args = {
 				type: "POST",
 				dataType: "json",
 				url: url,
@@ -351,7 +353,11 @@
 				headers : headers,
 				success : successHandler,
 				error : errorHandler
-			});
+			};
+			if (params instanceof FormData) {
+				args.contentType = false;
+			}
+			$.ajax(args);
 		} catch(e) {
 			alert(e);
 			return;
@@ -376,7 +382,6 @@
 	 * Function for AJAX submission of arbitrary forms.
 	 */
 	XE.ajaxForm = function(form, callback_success, callback_error) {
-		// Abort if the form already has a 'target' attribute.
 		form = $(form);
 		// Get success and error callback functions.
 		if (typeof callback_success === 'undefined') {
@@ -402,43 +407,10 @@
 				callback_error = null;
 			}
 		}
-		// Set _rx_ajax_form flag
-		if (!form.find('input[name=_rx_ajax_form]').size()) {
-			form.append('<input type="hidden" name="_rx_ajax_form" value="json" />');
-			setTimeout(function() {
-				form.find('input[name=_rx_ajax_form]').remove();
-			}, 1000);
-		}
-		// If the form has file uploads, use a hidden iframe to submit. Otherwise use exec_json.
-		var has_files = form.find('input[type=file][name!=Filedata]').size();
-		if (has_files) {
-			var iframe_id = '_rx_temp_iframe_' + (new Date()).getTime();
-			$('<iframe id="' + iframe_id + '" name="' + iframe_id + '" style="display:none"></iframe>').appendTo($(document.body));
-			form.attr('method', 'POST').attr('enctype', 'multipart/form-data').attr('target', iframe_id);
-			form.find('input[name=_rx_ajax_form]').val(iframe_id);
-			window.XE.handleIframeResponse = function(iframe_id, data) {
-				if (data.error) {
-					if (callback_error) {
-						callback_error(data);
-					} else {
-						alert(data.message);
-					}
-				} else {
-					callback_success(data);
-				}
-				if (iframe_id.match(/^_rx_temp_iframe_[0-9]+$/)) {
-					$('iframe#' + iframe_id).remove();
-				}
-			};
-			setTimeout(function() {
-				form.removeAttr('target');
-			}, 1000);
-			form.submit();
-		} else {
-			window.exec_json('raw', form.serialize(), callback_success, callback_error);
-		}
+		window.exec_json('raw', new FormData(form[0]), callback_success, callback_error);
 	};
 	$(document).on('submit', 'form.rx_ajax', function(event) {
+		// Abort if the form already has a 'target' attribute.
 		if (!$(this).attr('target')) {
 			event.preventDefault();
 			XE.ajaxForm(this);

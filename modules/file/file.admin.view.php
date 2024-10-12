@@ -127,9 +127,9 @@ class FileAdminView extends File
 					}
 				}
 
-				if (in_array($file->upload_target_type, ['doc', 'com']))
+				if (in_array($file->upload_target_type, ['doc', 'com', 'ev:doc', 'ev:com']))
 				{
-					$var = $file->upload_target_type . '_srls';
+					$var = str_replace('ev:', '', $file->upload_target_type) . '_srls';
 					if (!in_array($target_srl, $$var))
 					{
 						$$var[] = $target_srl;
@@ -187,7 +187,7 @@ class FileAdminView extends File
 
 			foreach($file_list as $srl => $file)
 			{
-				if($file->upload_target_type == 'com')
+				if($file->upload_target_type === 'com' || $file->upload_target_type === 'ev:com')
 				{
 					$file_list[$srl]->target_document_srl = $comment_list[$file->upload_target_srl]->document_srl;
 				}
@@ -224,6 +224,7 @@ class FileAdminView extends File
 		Context::set('config', $config);
 		Context::set('is_ffmpeg', function_exists('exec') && !empty($config->ffmpeg_command) && Rhymix\Framework\Storage::isExecutable($config->ffmpeg_command) && !empty($config->ffprobe_command) && Rhymix\Framework\Storage::isExecutable($config->ffprobe_command));
 		Context::set('is_magick', function_exists('exec') && !empty($config->magick_command) && Rhymix\Framework\Storage::isExecutable($config->magick_command));
+		Context::set('is_exec_available', function_exists('exec'));
 
 		// Set a template file
 		$this->setTemplatePath($this->module_path.'tpl');

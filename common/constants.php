@@ -3,7 +3,7 @@
 /**
  * RX_VERSION is the version number of the Rhymix CMS.
  */
-define('RX_VERSION', '2.1.17');
+define('RX_VERSION', '2.1.18');
 
 /**
  * RX_MICROTIME is the startup time of the current script, in microseconds since the Unix epoch.
@@ -85,7 +85,7 @@ else
 /*
  * RX_SSL is true if the current request uses SSL/TLS.
  */
-if (isset($_SERVER['HTTPS']) && !empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off')
+if (!empty($_SERVER['HTTPS']) && strtolower($_SERVER['HTTPS']) !== 'off')
 {
     define('RX_SSL', true);
 }

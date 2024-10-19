@@ -917,7 +917,14 @@ class BoardView extends Board
 		// if the document is not granted, then back to the password input form
 		if($oDocument->isExists() && !$oDocument->isGranted())
 		{
-			return $this->setTemplateFile('input_password_form');
+			if ($oDocument->getMemberSrl())
+			{
+				return $this->dispBoardMessage('msg_not_permitted');
+			}
+			else
+			{
+				return $this->setTemplateFile('input_password_form');
+			}
 		}
 
 		if(!$oDocument->isExists())
@@ -1033,7 +1040,14 @@ class BoardView extends Board
 		// if the document is not granted, then back to the password input form
 		if(!$oDocument->isGranted())
 		{
-			return $this->setTemplateFile('input_password_form');
+			if ($oDocument->getMemberSrl())
+			{
+				return $this->dispBoardMessage('msg_not_permitted');
+			}
+			else
+			{
+				return $this->setTemplateFile('input_password_form');
+			}
 		}
 
 		if($this->module_info->protect_document_regdate > 0 && $this->grant->manager == false)
@@ -1220,7 +1234,14 @@ class BoardView extends Board
 		if(!$oComment->isGranted())
 		{
 			Context::set('document_srl', $oComment->get('document_srl'));
-			return $this->setTemplateFile('input_password_form');
+			if ($oComment->getMemberSrl())
+			{
+				return $this->dispBoardMessage('msg_not_permitted');
+			}
+			else
+			{
+				return $this->setTemplateFile('input_password_form');
+			}
 		}
 
 		if($this->module_info->protect_comment_regdate > 0 && $this->grant->manager == false)
@@ -1297,7 +1318,14 @@ class BoardView extends Board
 		if(!$oComment->isGranted())
 		{
 			Context::set('document_srl', $oComment->get('document_srl'));
-			return $this->setTemplateFile('input_password_form');
+			if ($oComment->getMemberSrl())
+			{
+				return $this->dispBoardMessage('msg_not_permitted');
+			}
+			else
+			{
+				return $this->setTemplateFile('input_password_form');
+			}
 		}
 
 		if($this->module_info->protect_comment_regdate > 0 && $this->grant->manager == false)

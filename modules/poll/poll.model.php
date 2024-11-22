@@ -53,6 +53,7 @@ class PollModel extends Poll
 			$poll->poll[$val->poll_index_srl]->title = $val->title;
 			$poll->poll[$val->poll_index_srl]->checkcount = $val->checkcount;
 			$poll->poll[$val->poll_index_srl]->poll_count = $val->poll_count;
+			$poll->poll[$val->poll_index_srl]->hide = strpos($val->title, '[HIDE]') !== FALSE;
 		}
 
 		$output = executeQueryArray('poll.getPollItem', $args);

@@ -3,7 +3,7 @@
 /**
  * RX_VERSION is the version number of the Rhymix CMS.
  */
-define('RX_VERSION', '2.1.18');
+define('RX_VERSION', '2.1.19');
 
 /**
  * RX_MICROTIME is the startup time of the current script, in microseconds since the Unix epoch.
@@ -125,7 +125,7 @@ else
 /**
  * RX_WINDOWS is true if the operating system is Windows.
  */
-define('RX_WINDOWS', strncasecmp(PHP_OS, 'WIN', 3) === 0);
+define('RX_WINDOWS', PHP_OS_FAMILY === 'Windows');
 
 /**
  * XE core compatibility constants (may be used by XE-compatible plugins and themes).
@@ -143,7 +143,7 @@ define('__XE_VERSION_ALPHA__', false);
 define('__XE_VERSION_BETA__', false);
 define('__XE_VERSION_RC__', false);
 define('__XE_VERSION_STABLE__', true);
-define('__XE_MIN_PHP_VERSION__', '7.2.5');
+define('__XE_MIN_PHP_VERSION__', '7.4.0');
 define('__XE_RECOMMEND_PHP_VERSION__', '7.4.0');
 define('__ZBXE_VERSION__', RX_VERSION);
 define('_XE_LOCATION_', 'ko');

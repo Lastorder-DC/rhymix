@@ -20,7 +20,7 @@ class SpamfilterAdminController extends Spamfilter
 		$config = ModuleModel::getModuleConfig('spamfilter') ?: new stdClass;
 
 		// Get the default information
-		$args = Context::gets('limits', 'limits_interval', 'limits_count', 'ipv4_block_range', 'ipv6_block_range', 'except_ip', 'custom_message');
+		$args = Context::gets('limits', 'limits_interval', 'limits_count', 'blocked_actions', 'ipv4_block_range', 'ipv6_block_range', 'except_ip', 'custom_message');
 
 		// Set default values
 		if($args->limits != 'Y')
@@ -38,6 +38,7 @@ class SpamfilterAdminController extends Spamfilter
 		$args->except_ip = array_map('trim', preg_split('/[\n,]/', trim($args->except_ip ?? ''), -1, \PREG_SPLIT_NO_EMPTY));
 		$args->limits_interval = intval($args->limits_interval);
 		$args->limits_count = intval($args->limits_count);
+		$args->blocked_actions = array_values($args->blocked_actions ?? []);
 		$args->custom_message = escape(utf8_trim($args->custom_message));
 		foreach ($args as $key => $val)
 		{
@@ -177,9 +178,10 @@ class SpamfilterAdminController extends Spamfilter
 	{
 		//스팸 키워드 추가
 		$word_list = Context::get('word_list');
+		$enable_description = Context::get('enable_description') ?? 'N';
 		if($word_list)
 		{
-			$output = $this->insertWord($word_list);
+			$output = $this->insertWord($word_list, $enable_description);
 			if(!$output->toBool() && !$output->get('fail_list')) return $output;
 
 			if($output->get('fail_list')) $message_fail = '<em>'.sprintf(lang('msg_faillist'),$output->get('fail_list')).'</em>';
@@ -258,7 +260,7 @@ class SpamfilterAdminController extends Spamfilter
 	 * @brief Register the spam word
 	 * The post, which contains the newly registered spam word, should be considered as a spam
 	 */
-	public function insertWord($word_list)
+	public function insertWord($word_list, $enable_description = 'Y')
 	{
 		if (!is_array($word_list))
 		{
@@ -273,7 +275,7 @@ class SpamfilterAdminController extends Spamfilter
 			{
 				continue;
 			}
-			if (preg_match('/^(.+?)#(.+)$/', $word, $matches))
+			if ($enable_description === 'Y' && preg_match('/^(.+?)#(.+)$/', $word, $matches))
 			{
 				$word = trim($matches[1]);
 				$description = trim($matches[2]);

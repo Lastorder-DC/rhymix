@@ -172,11 +172,7 @@ class Cleanup extends Base
 		}
 
 		// Return default values for most common operating systems.
-		if (preg_match('/Linux/', \PHP_OS))
-		{
-			return $cache = true;
-		}
-		if (preg_match('/Win/i', \PHP_OS))
+		if (\RX_WINDOWS)
 		{
 			return $cache = false;
 		}

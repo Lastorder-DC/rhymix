@@ -50,10 +50,17 @@ class SpamfilterController extends Spamfilter
 			if($grant->manager) return;
 		}
 
-		$oFilterModel = getModel('spamfilter');
 		// Check if the IP is prohibited
-		$output = $oFilterModel->isDeniedIP();
-		if(!$output->toBool()) return $output;
+		$output = SpamfilterModel::isDeniedIP();
+		if(!$output->toBool())
+		{
+			$config = SpamfilterModel::getConfig();
+			if (!isset($config->blocked_actions) || in_array('document', $config->blocked_actions))
+			{
+				return $output;
+			}
+		}
+
 		// Check if there is a ban on the word
 		$filter_targets = [$obj->title, $obj->content, $obj->tags ?? ''];
 		if(!$is_logged)
@@ -71,7 +78,7 @@ class SpamfilterController extends Spamfilter
 				}
 			}
 		}
-		$output = $oFilterModel->isDeniedWord(implode("\n", $filter_targets));
+		$output = SpamfilterModel::isDeniedWord(implode("\n", $filter_targets));
 		if(!$output->toBool())
 		{
 			return $output;
@@ -79,7 +86,7 @@ class SpamfilterController extends Spamfilter
 		// Check the specified time beside the modificaiton time
 		if($obj->document_srl == 0)
 		{
-			$output = $oFilterModel->checkLimited();
+			$output = SpamfilterModel::checkLimited();
 			if(!$output->toBool()) return $output;
 		}
 		// Save a log
@@ -103,10 +110,17 @@ class SpamfilterController extends Spamfilter
 			if($grant->manager) return;
 		}
 
-		$oFilterModel = getModel('spamfilter');
 		// Check if the IP is prohibited
-		$output = $oFilterModel->isDeniedIP();
-		if(!$output->toBool()) return $output;
+		$output = SpamfilterModel::isDeniedIP();
+		if(!$output->toBool())
+		{
+			$config = SpamfilterModel::getConfig();
+			if (!isset($config->blocked_actions) || in_array('comment', $config->blocked_actions))
+			{
+				return $output;
+			}
+		}
+
 		// Check if there is a ban on the word
 		if($is_logged)
 		{
@@ -116,12 +130,12 @@ class SpamfilterController extends Spamfilter
 		{
 			$text = $obj->content . ' ' . $obj->nick_name . ' ' . $obj->homepage;
 		}
-		$output = $oFilterModel->isDeniedWord($text);
+		$output = SpamfilterModel::isDeniedWord($text);
 		if(!$output->toBool()) return $output;
 		// If the specified time check is not modified
 		if(!$obj->__isupdate)
 		{
-			$output = $oFilterModel->checkLimited();
+			$output = SpamfilterModel::checkLimited();
 			if(!$output->toBool()) return $output;
 		}
 		unset($obj->__isupdate);
@@ -183,30 +197,100 @@ class SpamfilterController extends Spamfilter
 	}
 
 	/**
+	 * Block voting from a spam IP.
+	 */
+	function triggerVote(&$obj)
+	{
+		if (!empty($_SESSION['avoid_log']))
+		{
+			return;
+		}
+
+		if ($this->user->isAdmin() || (Context::get('grant')->manager ?? false))
+		{
+			return;
+		}
+
+		$config = SpamfilterModel::getConfig();
+		if ($obj->point > 0 && isset($config->blocked_actions) && !in_array('vote_up', $config->blocked_actions))
+		{
+			return;
+		}
+		if ($obj->point < 0 && isset($config->blocked_actions) && !in_array('vote_down', $config->blocked_actions))
+		{
+			return;
+		}
+
+		$output = SpamfilterModel::isDeniedIP();
+		if (!$output->toBool())
+		{
+			return $output;
+		}
+	}
+
+	/**
+	 * Block reporting from a spam IP.
+	 */
+	function triggerDeclare(&$obj)
+	{
+		if (!empty($_SESSION['avoid_log']))
+		{
+			return;
+		}
+
+		if ($this->user->isAdmin() || (Context::get('grant')->manager ?? false))
+		{
+			return;
+		}
+
+		$config = SpamfilterModel::getConfig();
+		if (isset($config->blocked_actions) && !in_array('declare', $config->blocked_actions))
+		{
+			return;
+		}
+
+		$output = SpamfilterModel::isDeniedIP();
+		if (!$output->toBool())
+		{
+			return $output;
+		}
+	}
+
+	/**
 	 * @brief The routine process to check the time it takes to store a message, when writing it, and to ban IP/word
 	 */
 	function triggerSendMessage(&$obj)
 	{
-		if($_SESSION['avoid_log']) return;
+		if($this->user->isAdmin() || !empty($_SESSION['avoid_log']))
+		{
+			return;
+		}
+
 		if(isset($obj->use_spamfilter) && $obj->use_spamfilter === false)
 		{
 			return;
 		}
 
-		$logged_info = Context::get('logged_info');
-		if($logged_info->is_admin == 'Y') return;
-
-		$oFilterModel = getModel('spamfilter');
 		// Check if the IP is prohibited
-		$output = $oFilterModel->isDeniedIP();
-		if(!$output->toBool()) return $output;
+		$output = SpamfilterModel::isDeniedIP();
+		if(!$output->toBool())
+		{
+			$config = SpamfilterModel::getConfig();
+			if (!isset($config->blocked_actions) || in_array('message', $config->blocked_actions))
+			{
+				return $output;
+			}
+		}
+
 		// Check if there is a ban on the word
 		$text = $obj->title . ' ' . $obj->content;
-		$output = $oFilterModel->isDeniedWord($text);
+		$output = SpamfilterModel::isDeniedWord($text);
 		if(!$output->toBool()) return $output;
+
 		// Check the specified time
-		$output = $oFilterModel->checkLimited(TRUE);
+		$output = SpamfilterModel::checkLimited(TRUE);
 		if(!$output->toBool()) return $output;
+
 		// Save a log
 		$this->insertLog();
 	}

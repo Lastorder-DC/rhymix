@@ -289,9 +289,6 @@ class BoardView extends Board
 					}
 				}
 
-				// check the manage grant
-				if($this->grant->manager) $oDocument->setGrant();
-
 				// if the consultation function is enabled, and the document is not a notice
 				if($this->consultation && !$oDocument->isNotice())
 				{
@@ -904,7 +901,7 @@ class BoardView extends Board
 				}
 			}
 
-			if ($this->module_info->protect_admin_content_update !== 'N')
+			if (($this->module_info->protect_admin_content_update ?? 'N') !== 'N')
 			{
 				$member_info = MemberModel::getMemberInfo($oDocument->get('member_srl'));
 				if(isset($member_info->is_admin) && $member_info->is_admin == 'Y' && $this->user->is_admin != 'Y')

@@ -53,7 +53,6 @@ class PollModel extends Poll
 			$poll->poll[$val->poll_index_srl]->title = $val->title;
 			$poll->poll[$val->poll_index_srl]->checkcount = $val->checkcount;
 			$poll->poll[$val->poll_index_srl]->poll_count = $val->poll_count;
-			$poll->poll[$val->poll_index_srl]->hide = strpos($val->title, '[HIDE]') !== FALSE;
 		}
 
 		$output = executeQueryArray('poll.getPollItem', $args);
@@ -63,6 +62,7 @@ class PollModel extends Poll
 			unset($val->poll_srl);
 			$val->my_item = false;
 			if(($val->add_user_srl==$logged_info->member_srl || $poll_member_srl == $logged_info->member_srl) && $val->add_user_srl!=0) $val->my_item = true;
+			$val->hide = strpos($val->title, '[HIDE]') !== FALSE;
 			$poll->poll[$val->poll_index_srl]->item[] = $val;
 
 		}

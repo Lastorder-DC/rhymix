@@ -70,7 +70,7 @@ jQuery(function($){
 
 		$tr = $(this).prevAll('div').children('table').find('>tbody>tr:last');
 		match = $tr.find('td>input').attr('name').match(/item_(\d+)_(\d+)/);
-		if(!match) return;
+		if(!match || match[2] == 1) return;
 
 		$tr.remove();
 

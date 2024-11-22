@@ -100,8 +100,7 @@ class PollController extends Poll
 			}
 		}
 
-		// TEMP: allow empty poll if add item is on
-		if((!isset($args->poll) || !is_array($args->poll) || !count($args->poll)) && $vars->add_item != '2')
+		if(!isset($args->poll) || !is_array($args->poll) || !count($args->poll))
 		{
 			throw new Rhymix\Framework\Exception('cmd_null_item');
 		}

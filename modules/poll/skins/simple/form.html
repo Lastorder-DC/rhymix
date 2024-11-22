@@ -36,7 +36,7 @@
                 <!--@foreach($val->item as $item_srl => $item)-->
                 {@$_idx = $poll->poll_srl.'_'.$poll_srl_index.'_'.$item_srl}
 
-                <div class="item" cond="$item->title != '&lt;HIDE&gt;'">
+                <div class="item" cond="strpos($item->title, '[HIDE]') === FALSE">
                     <!--@if($val->checkcount>1)-->
                         <input type="checkbox" name="item_{$poll->poll_srl}_{$poll_srl_index}" value="{$item->poll_item_srl}" id="item_{$item->poll_item_srl}" /> 
                     <!--@else-->

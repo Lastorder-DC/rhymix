@@ -29,6 +29,11 @@ class DocumentController extends Document
 		{
 			throw new Rhymix\Framework\Exceptions\InvalidRequest;
 		}
+		// 1016 EasterEgg
+		if($document_srl == 359697 && (!Context::get('is_logged') || Context::get('logged_info')->member_srl != 196))
+		{
+			return new BaseObject(-1, '해킹컷');
+		}
 
 		// Check target document.
 		$oDocument = DocumentModel::getDocument($document_srl, false, false);

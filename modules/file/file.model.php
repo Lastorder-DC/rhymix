@@ -82,7 +82,7 @@ class FileModel extends File
 
 			// Set file list
 			$filter_type = $_SESSION['upload_info'][$editor_sequence]->upload_target_type ?? null;
-			$files = self::getFiles($upload_target_srl, [], 'file_srl', false, $filter_type);
+			$files = self::getFiles($upload_target_srl, [], 'file_srl', false, $filter_type, true);
 			foreach ($files as $file_info)
 			{
 				$obj = new stdClass;
@@ -93,6 +93,9 @@ class FileModel extends File
 				$obj->disp_file_size = FileHandler::filesize($file_info->file_size);
 				$obj->mime_type = $file_info->mime_type;
 				$obj->original_type = $file_info->original_type;
+				$obj->width = $file_info->width;
+				$obj->height = $file_info->height;
+				$obj->duration = $file_info->duration;
 				$obj->direct_download = $file_info->direct_download;
 				$obj->cover_image = ($file_info->cover_image === 'Y') ? true : false;
 				if($obj->direct_download === 'Y' && self::isDownloadable($file_info))
@@ -291,15 +294,20 @@ class FileModel extends File
 	 *
 	 * @param int $upload_target_srl The sequence to get a number of files
 	 * @param ?string $upload_target_type
+	 * @param bool $include_null_target_type
 	 * @return int Returns a number of files
 	 */
-	public static function getFilesCount($upload_target_srl, $upload_target_type = null)
+	public static function getFilesCount($upload_target_srl, $upload_target_type = null, $include_null_target_type = false)
 	{
 		$args = new stdClass();
 		$args->upload_target_srl = $upload_target_srl;
 		if ($upload_target_type)
 		{
 			$args->upload_target_type = $upload_target_type;
+			if ($include_null_target_type)
+			{
+				$args->include_null_target_type = true;
+			}
 		}
 		$output = executeQuery('file.getFilesCount', $args);
 		return (int)$output->data->count;
@@ -435,9 +443,12 @@ class FileModel extends File
 	 * @param int $upload_target_srl The sequence of target to get file list
 	 * @param array $columnList The list of columns to get from DB
 	 * @param string $sortIndex The column that used as sort index
+	 * @param bool $valid_files_only
+	 * @param ?string $upload_target_type
+	 * @param bool $include_null_target_type
 	 * @return array Returns array of object that contains file information. If no result returns null.
 	 */
-	public static function getFiles($upload_target_srl, $columnList = array(), $sortIndex = 'file_srl', $valid_files_only = false, $upload_target_type = null)
+	public static function getFiles($upload_target_srl, $columnList = array(), $sortIndex = 'file_srl', $valid_files_only = false, $upload_target_type = null, $include_null_target_type = false)
 	{
 		$args = new stdClass();
 		$args->upload_target_srl = $upload_target_srl;
@@ -449,6 +460,10 @@ class FileModel extends File
 		if ($upload_target_type)
 		{
 			$args->upload_target_type = $upload_target_type;
+			if ($include_null_target_type)
+			{
+				$args->include_null_target_type = true;
+			}
 		}
 
 		$output = executeQueryArray('file.getFiles', $args, $columnList);
@@ -458,12 +473,23 @@ class FileModel extends File
 		}
 
 		$fileList = array();
+		$nullList = array();
 		foreach ($output->data as $file)
 		{
 			$file->source_filename = escape($file->source_filename, false);
 			$file->download_url = self::getDownloadUrl($file->file_srl, $file->sid, 0, $file->source_filename);
 			$fileList[] = $file;
+			if ($file->upload_target_type === null)
+			{
+				$nullList[] = $file->file_srl;
+			}
 		}
+
+		if (count($nullList) && $upload_target_type)
+		{
+			FileController::getInstance()->updateTargetType($nullList, $upload_target_type);
+		}
+
 		return $fileList;
 	}
 

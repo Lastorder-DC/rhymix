@@ -72,7 +72,7 @@ class FrontEndFileHandler extends Handler
 	 * <pre>
 	 * case js
 	 * 		$args[0]: file name
-	 * 		$args[1]: type (head | body)
+	 * 		$args[1]: type (head | body | module)
 	 * 		$args[2]: unused (previously targetIe)
 	 * 		$args[3]: index
 	 * case css
@@ -245,6 +245,7 @@ class FrontEndFileHandler extends Handler
 		}
 		else if($file->fileExtension == 'js')
 		{
+			$file->jstype = $media === 'module' ? $media : '';
 			$file->key = sprintf('%s/%s', $file->filePath, $file->keyName);
 		}
 
@@ -489,7 +490,7 @@ class FrontEndFileHandler extends Handler
 					$concat_filename = self::$assetdir . '/combined/' . sha1(serialize($concat_files)) . '.css';
 					if (!file_exists(\RX_BASEDIR . $concat_filename) || filemtime(\RX_BASEDIR . $concat_filename) < $concat_max_timestamp)
 					{
-						$concat_content = Rhymix\Framework\Formatter::concatCSS($concat_files, $concat_filename);
+						$concat_content = Rhymix\Framework\Formatter::concatCSS($concat_files, \RX_BASEDIR . $concat_filename);
 						$concat_content = '@charset "UTF-8";' . "\n\n" . preg_replace('/@charset\s*[\'"][a-z0-9-]+[\'"];\s*/i', '', $concat_content);
 						Rhymix\Framework\Storage::write(\RX_BASEDIR . $concat_filename, $concat_content);
 					}
@@ -584,7 +585,8 @@ class FrontEndFileHandler extends Handler
 					$concat_filename = self::$assetdir . '/combined/' . sha1(serialize($concat_files)) . '.js';
 					if (!file_exists(\RX_BASEDIR . $concat_filename) || filemtime(\RX_BASEDIR . $concat_filename) < $concat_max_timestamp)
 					{
-						Rhymix\Framework\Storage::write(\RX_BASEDIR . $concat_filename, Rhymix\Framework\Formatter::concatJS($concat_files, $concat_filename));
+						$concat_content = Rhymix\Framework\Formatter::concatJS($concat_files, \RX_BASEDIR . $concat_filename);
+						Rhymix\Framework\Storage::write(\RX_BASEDIR . $concat_filename, $concat_content);
 					}
 					$concat_filename .= '?t=' . filemtime(\RX_BASEDIR . $concat_filename);
 					$result[] = array('file' => \RX_BASEURL . $concat_filename);
@@ -602,7 +604,12 @@ class FrontEndFileHandler extends Handler
 					{
 						$url .= '?t=' . filemtime($file->fileFullPath);
 					}
-					$result[] = array('file' => $url);
+					$attrs = '';
+					if ($file->jstype)
+					{
+						$attrs = ' type="' . $file->jstype . '"';
+					}
+					$result[] = array('file' => $url, 'attrs' => $attrs);
 				}
 			}
 		}
@@ -624,7 +631,7 @@ class FrontEndFileHandler extends Handler
 		{
 			foreach ($indexedMap as $file)
 			{
-				if ($file->isExternalURL || !is_readable($file->fileFullPath))
+				if ($file->isExternalURL || !is_readable($file->fileFullPath) || !empty($file->jstype))
 				{
 					$concat_key++;
 					$concat_list[$concat_key][] = $file;

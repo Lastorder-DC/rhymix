@@ -241,6 +241,10 @@ class CommentItem extends BaseObject
 		{
 			$_SESSION['accessible'][$this->comment_srl] = $this->get('last_update');
 		}
+		if(is_array($_SESSION['accessible']) && count($_SESSION['accessible']) > 200)
+		{
+			$_SESSION['accessible'] = array_slice($_SESSION['accessible'], 100, null, true);
+		}
 	}
 
 	function isEditable()
@@ -673,7 +677,7 @@ class CommentItem extends BaseObject
 			return;
 		}
 
-		$file_list = FileModel::getFiles($this->comment_srl, array(), 'file_srl', TRUE);
+		$file_list = FileModel::getFiles($this->comment_srl, array(), 'file_srl', true, 'com', true);
 		return $file_list;
 	}
 

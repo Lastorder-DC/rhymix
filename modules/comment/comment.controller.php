@@ -839,7 +839,10 @@ class CommentController extends Comment
 			}
 		}
 
-		$this->sendEmailToAdminAfterInsertComment($obj);
+		if (config('mail.default_from'))
+		{
+			$this->sendEmailToAdminAfterInsertComment($obj);
+		}
 
 		$output->add('comment_srl', $obj->comment_srl);
 
@@ -890,10 +893,13 @@ class CommentController extends Comment
 					Author: " . $member_info->nick_name . "
 					<br />Author e-mail: " . $member_info->email_address . "
 					<br />From : <a href=\"" . $url_comment . "\">" . $url_comment . "</a>
+					<br />
 					<br />Comment:
 					<br />\"" . $obj->content . "\"
+					<br />
 					<br />Document:
-					<br />\"" . $oDocument->getContentText(). "\"
+					<br />\"" . $oDocument->getTitleText(). "\"
+					<br />\"" . $oDocument->getContentPlainText(). "\"
 					<br />
 					<br />
 					Approve it: <a href=\"" . $url_approve . "\">" . $url_approve . "</a>
@@ -908,10 +914,13 @@ class CommentController extends Comment
 					Author: " . $member_info->nick_name . "
 					<br />Author e-mail: " . $member_info->email_address . "
 					<br />From : <a href=\"" . $url_comment . "\">" . $url_comment . "</a>
+					<br />
 					<br />Comment:
 					<br />\"" . $obj->content . "\"
+					<br />
 					<br />Document:
-					<br />\"" . $oDocument->getContentText(). "\"
+					<br />\"" . $oDocument->getTitleText(). "\"
+					<br />\"" . $oDocument->getContentPlainText(). "\"
 					";
 			}
 
@@ -919,17 +928,11 @@ class CommentController extends Comment
 			$oMail = new \Rhymix\Framework\Mail();
 			$oMail->setSubject($mail_title);
 			$oMail->setBody($mail_content);
-			$oMail->setFrom(config('mail.default_from') ?: $member_info->email_address, $member_info->nick_name);
-			if($member_info->email_address)
-			{
-				$oMail->setReplyTo($member_info->email_address);
-			}
 			foreach (array_map('trim', explode(',', $module_info->admin_mail)) as $email_address)
 			{
 				$oMail->addTo($email_address);
 			}
 			$oMail->send();
-			//  send email to all admins - STOP
 		}
 
 		$comment_srl_list = array(0 => $obj->comment_srl);
@@ -1711,6 +1714,12 @@ class CommentController extends Comment
 			$output->add('blamed_count', $trigger_obj->after_point);
 		}
 
+		// Prevent session data getting too large
+		if (count($_SESSION['voted_comment']) > 200)
+		{
+			$_SESSION['voted_comment'] = array_slice($_SESSION['voted_comment'], 100, null, true);
+		}
+
 		return $output;
 	}
 
@@ -1869,6 +1878,12 @@ class CommentController extends Comment
 
 		// leave into the session information
 		$_SESSION['declared_comment'][$comment_srl] = TRUE;
+
+		// Prevent session data getting too large
+		if (count($_SESSION['declared_comment']) > 200)
+		{
+			$_SESSION['declared_comment'] = array_slice($_SESSION['declared_comment'], 100, null, true);
+		}
 
 		$this->setMessage('success_declared');
 	}

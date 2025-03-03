@@ -699,7 +699,7 @@ class DocumentController extends Document
 			unset($obj->user_id);
 		}
 
-		$obj->uploaded_count = FileModel::getFilesCount($obj->document_srl);
+		$obj->uploaded_count = FileModel::getFilesCount($obj->document_srl, 'doc');
 
 		// Call a trigger (before)
 		$output = ModuleHandler::triggerCall('document.insertDocument', 'before', $obj);
@@ -996,7 +996,7 @@ class DocumentController extends Document
 		if(($obj->title_color ?? 'N') === 'N') $obj->title_color = 'N';
 		if(($obj->notify_message ?? 'N') !== 'Y') $obj->notify_message = 'N';
 		if(($obj->allow_trackback ?? 'N') !== 'Y') $obj->allow_trackback = 'N';
-		$obj->uploaded_count = FileModel::getFilesCount($obj->document_srl);
+		$obj->uploaded_count = FileModel::getFilesCount($obj->document_srl, 'doc');
 
 		// Call a trigger (before)
 		$output = ModuleHandler::triggerCall('document.updateDocument', 'before', $obj);
@@ -1274,7 +1274,7 @@ class DocumentController extends Document
 								{
 									// Check if deletion is allowed
 									$ev_output = $extra_item->validate(null);
-									if (!$ev_output->toBool())
+									if ($ev_output && !$ev_output->toBool())
 									{
 										$oDB->rollback();
 										return $ev_output;
@@ -1724,6 +1724,12 @@ class DocumentController extends Document
 			$_SESSION['readed_document'][$document_srl] = true;
 		}
 
+		// Prevent session data getting too large
+		if (is_array($_SESSION['readed_document']) && count($_SESSION['readed_document']) > 1000)
+		{
+			$_SESSION['readed_document'] = array_slice($_SESSION['readed_document'], 500, null, true);
+		}
+
 		return TRUE;
 	}
 
@@ -2111,6 +2117,12 @@ class DocumentController extends Document
 			$output->add('blamed_count', $trigger_obj->after_point);
 		}
 
+		// Prevent session data getting too large
+		if (count($_SESSION['voted_document']) > 200)
+		{
+			$_SESSION['voted_document'] = array_slice($_SESSION['voted_document'], 100, null, true);
+		}
+
 		return $output;
 	}
 
@@ -2269,6 +2281,12 @@ class DocumentController extends Document
 
 		// Leave in the session information
 		$_SESSION['declared_document'][$document_srl] = true;
+
+		// Prevent session data getting too large
+		if (count($_SESSION['declared_document']) > 200)
+		{
+			$_SESSION['declared_document'] = array_slice($_SESSION['declared_document'], 100, null, true);
+		}
 
 		$this->setMessage('success_declared');
 	}
@@ -3757,7 +3775,7 @@ Content;
 
 			$args = new stdClass;
 			$args->document_srl = $document_srl;
-			$args->uploaded_count = FileModel::getFilesCount($document_srl);
+			$args->uploaded_count = FileModel::getFilesCount($document_srl, 'doc');
 			executeQuery('document.updateUploadedCount', $args);
 		}
 	}

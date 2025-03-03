@@ -29,7 +29,10 @@ class FileController extends File
 		$file_info = Context::get('Filedata');
 
 		// An error appears if not a normally uploaded file
-		if(!$file_info || !is_uploaded_file($file_info['tmp_name'])) exit();
+		if (!$file_info || !is_uploaded_file($file_info['tmp_name']))
+		{
+			throw new Rhymix\Framework\Exceptions\InvalidRequest();
+		}
 
 		// Validate editor_sequence and module_srl.
 		$editor_sequence = Context::get('editor_sequence');
@@ -156,12 +159,17 @@ class FileController extends File
 		// Create the response
 		Context::setResponseMethod('JSON');
 		$this->add('file_srl', $output->get('file_srl'));
-		$this->add('file_size', $output->get('file_size'));
-		$this->add('direct_download', $output->get('direct_download'));
-		$this->add('source_filename', $output->get('source_filename'));
 		$this->add('upload_target_srl', $output->get('upload_target_srl'));
+		$this->add('source_filename', $output->get('source_filename'));
 		$this->add('thumbnail_filename', $output->get('thumbnail_filename'));
+		$this->add('file_size', $output->get('file_size'));
+		$this->add('disp_file_size', FileHandler::filesize($output->get('file_size')));
+		$this->add('mime_type', $output->get('mime_type'));
 		$this->add('original_type', $output->get('original_type'));
+		$this->add('width', $output->get('width'));
+		$this->add('height', $output->get('height'));
+		$this->add('duration', $output->get('duration'));
+		$this->add('direct_download', $output->get('direct_download'));
 		if ($output->get('direct_download') === 'Y')
 		{
 			$this->add('download_url', FileModel::getDirectFileUrl($output->get('uploaded_filename')));
@@ -772,6 +780,10 @@ class FileController extends File
 		{
 			$_SESSION['upload_info'] = array();
 		}
+		if(count($_SESSION['upload_info']) > 200)
+		{
+			$_SESSION['upload_info'] = array_slice($_SESSION['upload_info'], 100, null, true);
+		}
 		if(!isset($_SESSION['upload_info'][$editor_sequence]))
 		{
 			$_SESSION['upload_info'][$editor_sequence] = new stdClass();
@@ -819,6 +831,21 @@ class FileController extends File
 		$output = executeQuery('file.updateFileValid', $args);
 		$output->add('updated_file_count', intval(DB::getInstance()->getAffectedRows()));
 		return $output;
+	}
+
+	/**
+	 * Update upload target type
+	 *
+	 * @param int|array $file_srl
+	 * @param string $upload_target_type
+	 * @return BaseObject
+	 */
+	public function updateTargetType($file_srl, $upload_target_type)
+	{
+		$args = new stdClass;
+		$args->file_srl = $file_srl;
+		$args->upload_target_type = $upload_target_type;
+		return executeQuery('file.updateFileTargetType', $args);
 	}
 
 	/**
@@ -1097,13 +1124,17 @@ class FileController extends File
 
 		$output->add('file_srl', $args->file_srl);
 		$output->add('file_size', $args->file_size);
-		$output->add('sid', $args->sid);
+		$output->add('upload_target_srl', $upload_target_srl);
 		$output->add('direct_download', $args->direct_download);
 		$output->add('source_filename', $args->source_filename);
-		$output->add('upload_target_srl', $upload_target_srl);
 		$output->add('uploaded_filename', $args->uploaded_filename);
 		$output->add('thumbnail_filename', $args->thumbnail_filename);
+		$output->add('mime_type', $args->mime_type);
 		$output->add('original_type', $args->original_type);
+		$output->add('width', $args->width);
+		$output->add('height', $args->height);
+		$output->add('duration', $args->duration);
+		$output->add('sid', $args->sid);
 
 		return $output;
 	}
@@ -1163,23 +1194,11 @@ class FileController extends File
 		{
 			$adjusted['type'] = 'mp4';
 		}
-		elseif ($config->image_autoconv['png2jpg'] && $image_info['type'] === 'png' && function_exists('imagepng'))
+		elseif (!empty($config->image_autoconv[$image_info['type']]))
 		{
-			$adjusted['type'] = 'jpg';
+			$adjusted['type'] = $config->image_autoconv[$image_info['type']];
 		}
-		elseif ($config->image_autoconv['webp2jpg'] && $image_info['type'] === 'webp' && function_exists('imagewebp'))
-		{
-			$adjusted['type'] = 'jpg';
-		}
-		elseif ($config->image_autoconv['bmp2jpg'] && $image_info['type'] === 'bmp' && function_exists('imagebmp'))
-		{
-			$adjusted['type'] = 'jpg';
-		}
-		elseif ($config->image_autoconv['avif2jpg'] && $image_info['type'] === 'avif')
-		{
-			$adjusted['type'] = 'jpg';
-		}
-		elseif ($config->image_autoconv['heic2jpg'] && $image_info['type'] === 'heic')
+		elseif (!empty($config->image_autoconv[$image_info['type'] . '2jpg']))
 		{
 			$adjusted['type'] = 'jpg';
 		}
@@ -1246,7 +1265,7 @@ class FileController extends File
 				$adjusted['height'] = (int)$resize_height;
 				if (!$is_animated && $adjusted['type'] === $image_info['type'] && $config->max_image_size_same_format !== 'Y')
 				{
-					$adjusted['type'] = 'jpg';
+					$adjusted['type'] = $config->max_image_size_same_format ?: 'jpg';
 				}
 			}
 		}

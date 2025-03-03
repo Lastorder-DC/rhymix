@@ -706,8 +706,8 @@ class Context
 	 */
 	public static function getFTPInfo()
 	{
-		$ftp_info = self::$_instance->db_info->ftp_info;
-		if (!$ftp_info->ftp_user || !$ftp_info->ftp_root_path)
+		$ftp_info = self::$_instance->db_info->ftp_info ?? null;
+		if (empty($ftp_info->ftp_user) || empty($ftp_info->ftp_root_path))
 		{
 			return null;
 		}
@@ -2508,11 +2508,19 @@ class Context
 	 * Add html code before </head>
 	 *
 	 * @param string $header add html code before </head>.
+	 * @param bool $prepend
 	 * @return void
 	 */
-	public static function addHtmlHeader($header)
+	public static function addHtmlHeader($header, bool $prepend = false)
 	{
-		self::$_instance->html_header .= (self::$_instance->html_header ? "\n" : '') . $header;
+		if ($prepend)
+		{
+			self::$_instance->html_header = $header . (self::$_instance->html_header ? "\n" : '') . self::$_instance->html_header;
+		}
+		else
+		{
+			self::$_instance->html_header .= (self::$_instance->html_header ? "\n" : '') . $header;
+		}
 	}
 
 	/**
@@ -2594,10 +2602,19 @@ class Context
 	 * Add html code after <body>
 	 *
 	 * @param string $header Add html code after <body>
+	 * @param bool $prepend
+	 * @return void
 	 */
-	public static function addBodyHeader($header)
+	public static function addBodyHeader($header, bool $prepend = false)
 	{
-		self::$_instance->body_header .= (self::$_instance->body_header ? "\n" : '') . $header;
+		if ($prepend)
+		{
+			self::$_instance->body_header = $header . (self::$_instance->body_header ? "\n" : '') . self::$_instance->body_header;
+		}
+		else
+		{
+			self::$_instance->body_header .= (self::$_instance->body_header ? "\n" : '') . $header;
+		}
 	}
 
 	/**
@@ -2614,10 +2631,19 @@ class Context
 	 * Add html code before </body>
 	 *
 	 * @param string $footer Add html code before </body>
+	 * @param bool $prepend
+	 * @return void
 	 */
-	public static function addHtmlFooter($footer)
+	public static function addHtmlFooter($footer, bool $prepend = false)
 	{
-		self::$_instance->html_footer .= (self::$_instance->html_footer ? "\n" : '') . $footer;
+		if ($prepend)
+		{
+			self::$_instance->html_footer = $footer . (self::$_instance->html_footer ? "\n" : '') . self::$_instance->html_footer;
+		}
+		else
+		{
+			self::$_instance->html_footer .= (self::$_instance->html_footer ? "\n" : '') . $footer;
+		}
 	}
 
 	/**

@@ -796,12 +796,18 @@ class MemberController extends Member
 		}
 
 		// remove whitespace
-		$checkInfos = array('user_id', 'user_name', 'nick_name', 'email_address');
-		foreach($checkInfos as $val)
+		foreach(['user_id', 'nick_name', 'email_address'] as $val)
 		{
 			if(isset($args->{$val}))
 			{
 				$args->{$val} = preg_replace('/[\pZ\pC]+/u', '', utf8_clean(html_entity_decode($args->{$val})));
+			}
+		}
+		foreach(['user_name'] as $val)
+		{
+			if(isset($args->{$val}))
+			{
+				$args->{$val} = utf8_normalize_spaces(utf8_clean(html_entity_decode($args->{$val})));
 			}
 		}
 
@@ -867,12 +873,24 @@ class MemberController extends Member
 		$this->putSignature($args->member_srl, $signature);
 
 		// Log-in
-		if($config->enable_confirm != 'Y')
+		if ($config->enable_confirm != 'Y')
 		{
-			$output = $this->doLogin($args->{$config->identifier});
-			if(!$output->toBool()) {
-				if($output->error == -9)
+			if (isset($config->identifiers) && is_array($config->identifiers))
+			{
+				$identifier = array_first($config->identifiers);
+			}
+			else
+			{
+				$identifier = $config->identifier ?? 'user_id';
+			}
+
+			$output = $this->doLogin($args->{$identifier});
+			if (!$output->toBool())
+			{
+				if ($output->error == -9)
+				{
 					$output->error = -11;
+				}
 				return $this->setRedirectUrl(getUrl('', 'act', 'dispMemberLoginForm'), $output);
 			}
 		}
@@ -1080,12 +1098,18 @@ class MemberController extends Member
 		$args->extra_vars = serialize($extra_vars);
 
 		// remove whitespace
-		$checkInfos = array('user_id', 'user_name', 'nick_name', 'email_address');
-		foreach($checkInfos as $val)
+		foreach(['user_id', 'nick_name', 'email_address'] as $val)
 		{
 			if(isset($args->{$val}))
 			{
 				$args->{$val} = preg_replace('/[\pZ\pC]+/u', '', utf8_clean(html_entity_decode($args->{$val})));
+			}
+		}
+		foreach(['user_name'] as $val)
+		{
+			if(isset($args->{$val}))
+			{
+				$args->{$val} = utf8_normalize_spaces(utf8_clean(html_entity_decode($args->{$val})));
 			}
 		}
 
@@ -3772,6 +3796,8 @@ class MemberController extends Member
 			'country' => $phone_country,
 			'number' => $phone_number,
 			'code' => $is_special ? intval($config->special_phone_code) : $code,
+			'time' => time(),
+			'count' => 0,
 			'status' => false,
 		);
 
@@ -3820,8 +3846,23 @@ class MemberController extends Member
 		}
 
 		$code = intval($code);
-		if(!isset($_SESSION['verify_by_sms']) || $_SESSION['verify_by_sms']['code'] !== $code)
+		if(!isset($_SESSION['verify_by_sms']))
 		{
+			throw new Rhymix\Framework\Exception('verify_by_sms_code_incorrect');
+		}
+		if (isset($_SESSION['verify_by_sms']['count']) && $_SESSION['verify_by_sms']['count'] >= 10)
+		{
+			unset($_SESSION['verify_by_sms']);
+			throw new Rhymix\Framework\Exception('verify_by_sms_code_too_many_tries');
+		}
+		if (isset($_SESSION['verify_by_sms']['time']) && $_SESSION['verify_by_sms']['time'] < time() - 600)
+		{
+			unset($_SESSION['verify_by_sms']);
+			throw new Rhymix\Framework\Exception('verify_by_sms_code_expired');
+		}
+		if ($_SESSION['verify_by_sms']['code'] !== $code)
+		{
+			$_SESSION['verify_by_sms']['count']++;
 			throw new Rhymix\Framework\Exception('verify_by_sms_code_incorrect');
 		}
 

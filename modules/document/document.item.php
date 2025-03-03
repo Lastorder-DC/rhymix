@@ -285,6 +285,10 @@ class DocumentItem extends BaseObject
 		{
 			$_SESSION['accessible'][$this->document_srl] = $this->get('last_update');
 		}
+		if(is_array($_SESSION['accessible']) && count($_SESSION['accessible']) > 200)
+		{
+			$_SESSION['accessible'] = array_slice($_SESSION['accessible'], 100, null, true);
+		}
 	}
 
 	function allowComment()
@@ -1456,7 +1460,7 @@ class DocumentItem extends BaseObject
 
 		if(!isset($this->uploadedFiles[$sortIndex]))
 		{
-			$this->uploadedFiles[$sortIndex] = FileModel::getFiles($this->document_srl, array(), $sortIndex, true);
+			$this->uploadedFiles[$sortIndex] = FileModel::getFiles($this->document_srl, array(), $sortIndex, true, 'doc', true);
 		}
 
 		return $this->uploadedFiles[$sortIndex];

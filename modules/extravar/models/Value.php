@@ -122,6 +122,24 @@ class Value
 	}
 
 	/**
+	 * Check if this extra variable has a value.
+	 *
+	 * @return bool
+	 */
+	public function hasValue(): bool
+	{
+		$value = self::_getTypeValue($this->type, $this->value);
+		if ($value === null || $value === '' || (is_array($value) && !count($value)))
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
+	}
+
+	/**
 	 * Get the raw value.
 	 *
 	 * @return string|array|null
@@ -233,9 +251,9 @@ class Value
 	 *
 	 * @param mixed $value
 	 * @param mixed $old_value
-	 * @return ?BaseObject
+	 * @return BaseObject
 	 */
-	public function validate($value, $old_value = null): ?BaseObject
+	public function validate($value, $old_value = null): BaseObject
 	{
 		// Take legacy encoding into consideration.
 		if (is_array($value))
@@ -295,7 +313,7 @@ class Value
 			}
 		}
 
-		return null;
+		return new BaseObject;
 	}
 
 	/**

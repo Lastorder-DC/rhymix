@@ -112,7 +112,7 @@ $lang->cmd_new_domain = '새 도메인 추가';
 $lang->cmd_edit_domain = '도메인 정보 수정';
 $lang->cmd_is_default_domain = '기본 도메인';
 $lang->cmd_multidomain_configuration = '멀티도메인 기능 설정';
-$lang->cmd_unregistered_domain_action = '등록되지 않은 도메인 처리';
+$lang->cmd_unregistered_domain_action = '설정하지 않은 도메인 처리';
 $lang->cmd_unregistered_domain_redirect_301 = '기본 도메인으로 301 Redirect (권장)';
 $lang->cmd_unregistered_domain_redirect_302 = '기본 도메인으로 302 Redirect';
 $lang->cmd_unregistered_domain_display = '메인 화면 표시';
@@ -367,7 +367,7 @@ $lang->site_default_color_scheme_options = array(
 	'dark' => '어두운 색상 고정',
 );
 $lang->use_sso = '<abbr title="Single Sign On">SSO</abbr> 사용';
-$lang->about_use_sso = '한 번만 로그인하면 모든 도메인에 로그인되도록 합니다.';
+$lang->about_use_sso = '한 번만 로그인하면 모든 도메인에 로그인되도록 합니다.<br>이 기능은 폐기 예정이니 의존하지 마시기 바랍니다.';
 $lang->about_arrange_session = '세션을 정리하시겠습니까?';
 $lang->cmd_clear_session = '세션 정리';
 $lang->save = '저장';

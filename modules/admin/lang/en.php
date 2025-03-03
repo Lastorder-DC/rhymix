@@ -113,7 +113,7 @@ $lang->cmd_new_domain = 'Add New Domain';
 $lang->cmd_edit_domain = 'Edit Domain';
 $lang->cmd_is_default_domain = 'Default Domain';
 $lang->cmd_multidomain_configuration = 'Multidomain Configuration';
-$lang->cmd_unregistered_domain_action = 'Unregistered Domains';
+$lang->cmd_unregistered_domain_action = 'Unconfigured Domains';
 $lang->cmd_unregistered_domain_redirect_301 = '301 Redirect to Default Domain (Recommended)';
 $lang->cmd_unregistered_domain_redirect_302 = '302 Redirect to Default Domain';
 $lang->cmd_unregistered_domain_display = 'Display Main Screen as Usual';
@@ -329,7 +329,7 @@ $lang->use_rewrite = 'Use Short URLs';
 $lang->use_rewrite_0 = 'None';
 $lang->use_rewrite_1 = 'XE-compatible URLs only';
 $lang->use_rewrite_2 = 'All supported URLs';
-$lang->about_use_rewrite = 'Your web server must support mod_rewrite in order for short URLs to work. Apache usually detects the .htaccess file automatically.<br />nginx users should configure rewrite rules according to <a href="https://github.com/rhymix/rhymix-docs/blob/master/ko/introduction/nginx.md> target="_blank">the manual</a>. Outdated versions of nginx rewrite rules only support XE-compatible short URLs.';
+$lang->about_use_rewrite = 'Your web server must support mod_rewrite in order for short URLs to work. Apache usually detects the .htaccess file automatically.<br />nginx users should configure rewrite rules according to <a href="https://github.com/rhymix/rhymix-docs/blob/master/ko/introduction/nginx.md" target="_blank">the manual</a>. Outdated versions of nginx rewrite rules only support XE-compatible short URLs.';
 $lang->timezone = 'Time Zone';
 $lang->use_mobile_view = 'Enable Mobile View';
 $lang->about_use_mobile_view = 'Show mobile page when visitors access with mobile devices.';
@@ -371,7 +371,7 @@ $lang->site_default_color_scheme_options = array(
 	'dark' => 'Dark mode only',
 );
 $lang->use_sso = 'Use <abbr title="Single Sign On">SSO</abbr>?';
-$lang->about_use_sso = 'Logging into one domain will automatically log the user into all domains.';
+$lang->about_use_sso = 'Logging into one domain will automatically log the user into all domains.<br>Do not rely on this feature, as it will be removed in the future.';
 $lang->about_arrange_session = 'Do you want to clean up old session data?';
 $lang->cmd_clear_session = 'Session cleanup';
 $lang->save = 'Save';

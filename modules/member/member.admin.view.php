@@ -58,9 +58,12 @@ class MemberAdminView extends Member
 
 		// retrieve group list
 		$this->group_list = $oMemberModel->getGroups();
-		foreach ($this->group_list as $group)
+		if ($this->act !== 'dispMemberAdminGroupList')
 		{
-			$group->title = Context::replaceUserLang($group->title, true);
+			foreach ($this->group_list as $group)
+			{
+				$group->title = Context::replaceUserLang($group->title, true);
+			}
 		}
 		Context::set('group_list', $this->group_list);
 
@@ -455,18 +458,19 @@ class MemberAdminView extends Member
 			}
 		}
 
-		$identifier = array_first($member_config->identifiers);
-		$identifierForm = new stdClass;
-		$identifierForm->title = lang($identifier);
-		$identifierForm->name = $identifier;
-		$identifierForm->value = $member_info->$identifier;
-		Context::set('identifierForm', $identifierForm);
-
 		if ($member_info->limit_date < date('Ymd'))
 		{
 			$member_info->limit_date = '';
 		}
 
+		if (Context::get('member_srl'))
+		{
+			Context::setBrowserTitle(lang('member.msg_update_member'));
+		}
+		else
+		{
+			Context::setBrowserTitle(lang('member.msg_new_member'));
+		}
 		$this->setTemplateFile('insert_member');
 	}
 
@@ -508,7 +512,11 @@ class MemberAdminView extends Member
 
 		foreach($member_config->signupForm as $formInfo)
 		{
-			if(!$formInfo->isUse || (in_array($formInfo->name, $identifiers) && $formInfo->name === array_first($identifiers)) || $formInfo->name == 'password')
+			if(!$formInfo->isUse || ($formInfo->name == 'password' && !$isAdmin))
+			{
+				continue;
+			}
+			if((in_array($formInfo->name, $identifiers) && $formInfo->name === array_first($identifiers)) && !$isAdmin)
 			{
 				continue;
 			}
@@ -673,6 +681,16 @@ class MemberAdminView extends Member
 						$input->input_name = $formInfo->name;
 						$input->input_id = $formInfo->name;
 						$input->value = $memberInfo[$formInfo->name] ?? '';
+						$inputTag = $input->getFormHTML();
+					}
+					else if($formInfo->name == 'password')
+					{
+						$formTag->type = 'password';
+						$input = new Rhymix\Modules\Extravar\Models\Value(0, 1, '', 'password');
+						$input->parent_type = 'member';
+						$input->input_name = $formInfo->name;
+						$input->input_id = $formInfo->name;
+						$input->value = '';
 						$inputTag = $input->getFormHTML();
 					}
 					else

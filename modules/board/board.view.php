@@ -5,24 +5,26 @@
  * @class  boardView
  * @author NAVER (developers@xpressengine.com)
  * @brief  board module View class
- **/
+ */
 class BoardView extends Board
 {
-	var $listConfig;
-	var $columnList;
+	/**
+	 * Default values
+	 */
+	public $listConfig = [];
+	public $columnList = [];
 
 	/**
 	 * @brief initialization
-	 * board module can be used in either normal mode or admin mode.\n
-	 **/
-	function init()
+	 */
+	public function init()
 	{
 		$oSecurity = new Security();
 		$oSecurity->encodeHTML('document_srl', 'comment_srl', 'vid', 'mid', 'page', 'category', 'search_target', 'search_keyword', 'sort_index', 'order_type', 'trackback_srl');
 
 		/**
 		 * setup the module general information
-		 **/
+		 */
 		$m = Context::get('m');
 		$this->list_count = $m ? ($this->module_info->mobile_list_count ?? 20) : ($this->module_info->list_count ?? 20);
 		$this->search_list_count = $m ? ($this->module_info->mobile_search_list_count ?? 20) : ($this->module_info->search_list_count ?? 20);
@@ -68,7 +70,7 @@ class BoardView extends Board
 		/**
 		 * check the consultation function, if the user is admin then swich off consultation function
 		 * if the user is not logged, then disppear write document/write comment./ view document
-		 **/
+		 */
 		if($this->module_info->consultation == 'Y' && !$this->grant->manager && !$this->grant->consultation_read)
 		{
 			$this->consultation = TRUE;
@@ -87,13 +89,13 @@ class BoardView extends Board
 
 		/**
 		 * use context::set to setup extra variables
-		 **/
+		 */
 		$extra_keys = DocumentModel::getExtraKeys($this->module_info->module_srl);
 		Context::set('extra_keys', $extra_keys);
 
 		/**
 		 * add extra variables to order(sorting) target
-		 **/
+		 */
 		if (is_array($extra_keys))
 		{
 			foreach($extra_keys as $val)
@@ -103,7 +105,7 @@ class BoardView extends Board
 		}
 		/**
 		 * load javascript, JS filters
-		 **/
+		 */
 		Context::addJsFilter($this->module_path.'tpl/filter', 'input_password.xml');
 		Context::loadFile([$this->module_path.'tpl/js/board.js', 'head']);
 		if (config('url.rewrite') > 1)
@@ -127,12 +129,12 @@ class BoardView extends Board
 
 	/**
 	 * @brief display board contents
-	 **/
-	function dispBoardContent()
+	 */
+	public function dispBoardContent()
 	{
 		/**
 		 * check the access grant (all the grant has been set by the module object)
-		 **/
+		 */
 		if(!$this->grant->access || !$this->grant->list)
 		{
 			$this->dispBoardMessage($this->user->isMember() ? 'msg_not_permitted' : 'msg_not_logged');
@@ -140,13 +142,13 @@ class BoardView extends Board
 
 		/**
 		 * display the category list, and then setup the category list on context
-		 **/
+		 */
 		$this->dispBoardCategoryList();
 
 		/**
 		 * display the search options on the screen
 		 * add extra vaiables to the search options
-		 **/
+		 */
 		// use search options on the template (the search options key has been declared, based on the language selected)
 		foreach($this->search_option as $opt) $search_option[$opt] = lang($opt);
 		$extra_keys = Context::get('extra_keys');
@@ -208,7 +210,7 @@ class BoardView extends Board
 
 		/**
 		 * add javascript filters
-		 **/
+		 */
 		Context::addJsFilter($this->module_path.'tpl/filter', 'search.xml');
 
 		$oSecurity = new Security();
@@ -220,10 +222,11 @@ class BoardView extends Board
 
 	/**
 	 * @brief display the category list
-	 **/
-	function dispBoardCategoryList(){
+	 */
+	public function dispBoardCategoryList()
+	{
 		// check if the use_category option is enabled
-		if($this->module_info->use_category=='Y')
+		if ($this->module_info->use_category === 'Y' || !empty($this->include_modules))
 		{
 			// check the grant
 			if(!$this->grant->list)
@@ -239,13 +242,30 @@ class BoardView extends Board
 			}
 			else
 			{
-				$category_list = DocumentModel::getCategoryList($this->module_srl);
+				if ($this->module_info->use_category === 'Y')
+				{
+					$category_list = DocumentModel::getCategoryList($this->module_srl);
+				}
+				else
+				{
+					$category_list = [];
+				}
+
 				foreach ($this->include_modules as $module_srl)
 				{
 					if ($module_srl != $this->module_srl)
 					{
-						$category_list += DocumentModel::getCategoryList($module_srl);
+						if ((ModuleModel::getModuleExtraVars($module_srl)->hide_category ?? 'N') !== 'Y')
+						{
+							$category_list += DocumentModel::getCategoryList($module_srl);
+						}
 					}
+				}
+
+				if ($category_list)
+				{
+					$this->module_info->hide_category = 'N';
+					$this->module_info->use_category = 'Y';
 				}
 			}
 			Context::set('category_list', $category_list);
@@ -257,15 +277,16 @@ class BoardView extends Board
 
 	/**
 	 * @brief display the board conent view
-	 **/
-	function dispBoardContentView(){
+	 */
+	public function dispBoardContentView()
+	{
 		// get the variable value
 		$document_srl = Context::get('document_srl');
 		$page = Context::get('page');
 
 		/**
 		 * if the document exists, then get the document information
-		 **/
+		 */
 		if($document_srl)
 		{
 			$oDocument = DocumentModel::getDocument($document_srl, false, true);
@@ -318,16 +339,17 @@ class BoardView extends Board
 
 		/**
 		 * if the document is not existed, get an empty document
-		 **/
+		 */
 		}
 		else
 		{
 			$oDocument = DocumentModel::getDocument(0);
+			$oDocument->add('module_srl', $this->module_srl);
 		}
 
 		/**
 		 *check the document view grant
-		 **/
+		 */
 		if($oDocument->isExists())
 		{
 			if(!$this->grant->view && !$oDocument->isGranted())
@@ -373,17 +395,18 @@ class BoardView extends Board
 
 		/**
 		 * add javascript filters
-		 **/
+		 */
 		Context::addJsFilter($this->module_path.'tpl/filter', 'insert_comment.xml');
 	}
 
 	/**
 	 * @brief  display the document file list (can be used by API)
-	 **/
-	function dispBoardContentFileList(){
+	 */
+	public function dispBoardContentFileList()
+	{
 		/**
 		 * check the access grant (all the grant has been set by the module object)
-		 **/
+		 */
 		if(!$this->grant->access)
 		{
 			return $this->dispBoardMessage('msg_not_permitted');
@@ -449,8 +472,9 @@ class BoardView extends Board
 
 	/**
 	 * @brief display the document comment list (can be used by API)
-	 **/
-	function dispBoardContentCommentList(){
+	 */
+	public function dispBoardContentCommentList()
+	{
 		// check document view grant
 		$this->dispBoardContentView();
 
@@ -475,8 +499,9 @@ class BoardView extends Board
 
 	/**
 	 * @brief display notice list (can be used by API)
-	 **/
-	function dispBoardNoticeList(){
+	 */
+	public function dispBoardNoticeList()
+	{
 		// check the grant
 		if(!$this->grant->list || (Context::get('document_srl') && $this->module_info->use_bottom_list === 'N'))
 		{
@@ -502,8 +527,9 @@ class BoardView extends Board
 
 	/**
 	 * @brief display board content list
-	 **/
-	function dispBoardContentList(){
+	 */
+	public function dispBoardContentList()
+	{
 		// check the grant
 		if(!$this->grant->list || (Context::get('document_srl') && $this->module_info->use_bottom_list === 'N'))
 		{
@@ -670,7 +696,7 @@ class BoardView extends Board
 		}
 	}
 
-	function _makeListColumnList()
+	public function _makeListColumnList()
 	{
 		// List of all available columns
 		$allColumnList = array(
@@ -727,8 +753,8 @@ class BoardView extends Board
 
 	/**
 	 * @brief display tag list
-	 **/
-	function dispBoardTagList()
+	 */
+	public function dispBoardTagList()
 	{
 		// check if there is not grant fot view list, then alert an warning message
 		if(!$this->grant->list)
@@ -774,7 +800,7 @@ class BoardView extends Board
 	/**
 	 * @brief display category list
 	 */
-	function dispBoardCategory()
+	public function dispBoardCategory()
 	{
 		$this->dispBoardCategoryList();
 		$this->setTemplateFile('category.html');
@@ -783,7 +809,7 @@ class BoardView extends Board
 	/**
 	 * @brief display comment page
 	 */
-	function dispBoardCommentPage()
+	public function dispBoardCommentPage()
 	{
 		$document_srl = Context::get('document_srl');
 		if(!$document_srl)
@@ -810,8 +836,8 @@ class BoardView extends Board
 
 	/**
 	 * @brief display document write form
-	 **/
-	function dispBoardWrite()
+	 */
+	public function dispBoardWrite()
 	{
 		// check grant
 		if(!$this->grant->write_document)
@@ -821,7 +847,7 @@ class BoardView extends Board
 
 		/**
 		 * check if the category option is enabled not not
-		 **/
+		 */
 		if($this->module_info->use_category=='Y')
 		{
 			// get the user group information
@@ -969,7 +995,7 @@ class BoardView extends Board
 
 		/**
 		 * add JS filters
-		 **/
+		 */
 		if($this->grant->manager || $this->module_info->allow_no_category == 'Y')
 		{
 			Context::addJsFilter($this->module_path.'tpl/filter', 'insert_admin.xml');
@@ -985,7 +1011,7 @@ class BoardView extends Board
 		$this->setTemplateFile('write_form');
 	}
 
-	function _getStatusNameList()
+	public function _getStatusNameList()
 	{
 		$resultList = array();
 		if(!empty($this->module_info->use_status))
@@ -1006,8 +1032,8 @@ class BoardView extends Board
 
 	/**
 	 * @brief display board module deletion form
-	 **/
-	function dispBoardDelete()
+	 */
+	public function dispBoardDelete()
 	{
 		// check grant
 		if(!$this->grant->write_document)
@@ -1078,7 +1104,7 @@ class BoardView extends Board
 
 		/**
 		 * add JS filters
-		 **/
+		 */
 		Context::addJsFilter($this->module_path.'tpl/filter', 'delete_document.xml');
 
 		$this->setTemplateFile('delete_form');
@@ -1086,8 +1112,8 @@ class BoardView extends Board
 
 	/**
 	 * @brief display comment wirte form
-	 **/
-	function dispBoardWriteComment()
+	 */
+	public function dispBoardWriteComment()
 	{
 		$document_srl = Context::get('document_srl');
 
@@ -1122,7 +1148,7 @@ class BoardView extends Board
 
 		/**
 		 * add JS filter
-		 **/
+		 */
 		Context::addJsFilter($this->module_path.'tpl/filter', 'insert_comment.xml');
 
 		$this->setTemplateFile('comment_form');
@@ -1130,8 +1156,8 @@ class BoardView extends Board
 
 	/**
 	 * @brief display comment replies page
-	 **/
-	function dispBoardReplyComment()
+	 */
+	public function dispBoardReplyComment()
 	{
 		// check grant
 		if(!$this->grant->write_comment)
@@ -1191,7 +1217,7 @@ class BoardView extends Board
 
 		/**
 		 * add JS filters
-		 **/
+		 */
 		Context::addJsFilter($this->module_path.'tpl/filter', 'insert_comment.xml');
 
 		$this->setTemplateFile('comment_form');
@@ -1199,8 +1225,8 @@ class BoardView extends Board
 
 	/**
 	 * @brief display the comment modification from
-	 **/
-	function dispBoardModifyComment()
+	 */
+	public function dispBoardModifyComment()
 	{
 		// check grant
 		if(!$this->grant->write_comment)
@@ -1275,7 +1301,7 @@ class BoardView extends Board
 
 		/**
 		 * add JS fitlers
-		 **/
+		 */
 		Context::addJsFilter($this->module_path.'tpl/filter', 'insert_comment.xml');
 
 		$this->setTemplateFile('comment_form');
@@ -1283,8 +1309,8 @@ class BoardView extends Board
 
 	/**
 	 * @brief display the delete comment  form
-	 **/
-	function dispBoardDeleteComment()
+	 */
+	public function dispBoardDeleteComment()
 	{
 		// check grant
 		if(!$this->grant->write_comment)
@@ -1358,7 +1384,7 @@ class BoardView extends Board
 
 		/**
 		 * add JS filters
-		 **/
+		 */
 		Context::addJsFilter($this->module_path.'tpl/filter', 'delete_comment.xml');
 
 		$this->setTemplateFile('delete_comment_form');
@@ -1366,8 +1392,8 @@ class BoardView extends Board
 
 	/**
 	 * @brief display the delete trackback form
-	 **/
-	function dispBoardDeleteTrackback()
+	 */
+	public function dispBoardDeleteTrackback()
 	{
 		$oTrackbackModel = getModel('trackback');
 		if(!$oTrackbackModel)
@@ -1393,13 +1419,13 @@ class BoardView extends Board
 
 		/**
 		 * add JS filters
-		 **/
+		 */
 		Context::addJsFilter($this->module_path.'tpl/filter', 'delete_trackback.xml');
 
 		$this->setTemplateFile('delete_trackback_form');
 	}
 
-	function dispBoardUpdateLog()
+	public function dispBoardUpdateLog()
 	{
 		if($this->grant->update_view !== true)
 		{
@@ -1427,7 +1453,7 @@ class BoardView extends Board
 		$this->setTemplateFile('update_list');
 	}
 
-	function dispBoardUpdateLogView()
+	public function dispBoardUpdateLogView()
 	{
 		if($this->grant->update_view !== true)
 		{
@@ -1464,7 +1490,7 @@ class BoardView extends Board
 		$this->setTemplateFile('update_view');
 	}
 
-	function dispBoardVoteLog()
+	public function dispBoardVoteLog()
 	{
 		iF($this->grant->vote_log_view !== true)
 		{
@@ -1528,7 +1554,7 @@ class BoardView extends Board
 	/**
 	 * Default 404 Handler.
 	 */
-	function dispBoardNotFound()
+	public function dispBoardNotFound()
 	{
 		$this->dispBoardMessage('msg_not_founded', 404);
 	}
@@ -1540,7 +1566,7 @@ class BoardView extends Board
 	 * @param int $http_code
 	 * @return void
 	 */
-	function dispBoardMessage($msg_code, $http_code = 403)
+	public function dispBoardMessage($msg_code, $http_code = 403)
 	{
 		//Context::set('message', lang($msg_code));
 		//$this->setTemplateFile('message');
@@ -1561,11 +1587,10 @@ class BoardView extends Board
 	 * @param int $http_code
 	 * @return void
 	 */
-	function alertMessage($msg_code, $http_code = 403)
+	public function alertMessage($msg_code, $http_code = 403)
 	{
 		$script = sprintf('<script> jQuery(function(){ alert(%s); } );</script>', json_encode(lang($msg_code)));
 		Context::addHtmlFooter($script);
 		$this->setHttpStatusCode($http_code);
 	}
-
 }

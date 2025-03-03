@@ -123,12 +123,18 @@ class MemberAdminController extends Member
 		}
 
 		// remove whitespace
-		$checkInfos = array('user_id', 'user_name', 'nick_name', 'email_address');
-		foreach($checkInfos as $val)
+		foreach(['user_id', 'nick_name', 'email_address'] as $val)
 		{
 			if(isset($args->{$val}))
 			{
 				$args->{$val} = preg_replace('/[\pZ\pC]+/u', '', utf8_clean(html_entity_decode($args->{$val})));
+			}
+		}
+		foreach(['user_name'] as $val)
+		{
+			if(isset($args->{$val}))
+			{
+				$args->{$val} = utf8_normalize_spaces(utf8_clean(html_entity_decode($args->{$val})));
 			}
 		}
 
@@ -666,7 +672,33 @@ class MemberAdminController extends Member
 			$args->mskin = 'default';
 		}
 
+		// Update member module config
 		$output = $oModuleController->updateModuleConfig('member', $args);
+		if (!$output->toBool())
+		{
+			return $output;
+		}
+
+		// Sync member mid info with module config
+		$config = MemberModel::getMemberConfig();
+		if ($config->mid)
+		{
+			$module_info = ModuleModel::getModuleInfoByMid($config->mid);
+			if ($module_info->module === 'member')
+			{
+				$module_info->layout_srl = $args->layout_srl ?? -1;
+				$module_info->mlayout_srl = $args->mlayout_srl ?? -1;
+				$module_info->skin = $args->skin;
+				$module_info->mskin = $args->mskin;
+				$module_info->is_skin_fix = str_starts_with($module_info->skin, '/') ? 'N' : 'Y';
+				$module_info->is_mskin_fix = str_starts_with($module_info->mskin, '/') ? 'N' : 'Y';
+				$output = ModuleController::getInstance()->updateModule($module_info);
+				if (!$output->toBool())
+				{
+					return $output;
+				}
+			}
+		}
 
 		// default setting end
 		$this->setMessage('success_updated');
@@ -1357,7 +1389,7 @@ class MemberAdminController extends Member
 		}
 		$args->group_srl = !empty($args->group_srl) ? $args->group_srl : getNextSequence();
 		$args->list_order = $args->list_order ?? $args->group_srl;
-		$args->title = escape($args->title);
+		$args->title = escape($args->title, false, true);
 		$args->description = escape($args->description);
 
 		$output = executeQuery('member.insertGroup', $args);
@@ -1408,7 +1440,7 @@ class MemberAdminController extends Member
 			$output = executeQuery('member.updateGroupDefaultClear', $args);
 			if(!$output->toBool()) return $output;
 		}
-		$args->title = isset($args->title) ? escape($args->title) : null;
+		$args->title = isset($args->title) ? escape($args->title, false, true) : null;
 		$args->description = isset($args->description) ? escape($args->description) : null;
 
 		$output = executeQuery('member.updateGroup', $args);

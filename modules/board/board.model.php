@@ -5,22 +5,16 @@
  * @class  boardModel
  * @author NAVER (developers@xpressengine.com)
  * @brief  board module  Model class
- **/
+ */
 class BoardModel extends Board
 {
 	/**
-	 * @brief initialization
-	 **/
-	function init()
-	{
-	}
-
-	/**
 	 * @brief get the list configuration
-	 **/
+	 */
 	public static function getListConfig($module_srl)
 	{
 		// get the list config value, if it is not exitsted then setup the default value
+		$module_srl = (int)$module_srl;
 		$list_config = ModuleModel::getModulePartConfig('board', $module_srl);
 		if(!is_array($list_config) || count($list_config) <= 0)
 		{
@@ -53,7 +47,7 @@ class BoardModel extends Board
 
 	/**
 	 * @brief return the default list configration value
-	 **/
+	 */
 	public static function getDefaultListConfig($module_srl)
 	{
 		$extra_vars = [];
@@ -84,7 +78,7 @@ class BoardModel extends Board
 
 	/**
 	 * @brief return module name in sitemap
-	 **/
+	 */
 	public function triggerModuleListInSitemap(&$obj)
 	{
 		array_push($obj, 'board');

@@ -52,13 +52,13 @@
 		<div class="x_control-group">
 			<label class="x_control-label" for="lang_meta_keywords">{$lang->meta_keywords}</label>
 			<div class="x_controls">
-				<input type="text" name="meta_keywords" id="meta_keywords" value="{$module_info->meta_keywords}" class="lang_code" />
+				<input type="text" name="meta_keywords" id="meta_keywords" value="{$module_info->meta_keywords}" class="x_full-width lang_code" />
 			</div>
 		</div>
 		<div class="x_control-group">
 			<label class="x_control-label" for="lang_meta_description">{$lang->meta_description}</label>
 			<div class="x_controls">
-				<input type="text" name="meta_description" id="meta_description" value="{$module_info->meta_description}" class="lang_code" />
+				<input type="text" name="meta_description" id="meta_description" value="{$module_info->meta_description}" class="x_full-width lang_code" />
 			</div>
 		</div>
 		<div class="x_control-group">
@@ -104,14 +104,14 @@
 		<div class="x_control-group">
 			<label class="x_control-label" for="lang_header_text">{$lang->header_text}</label>
 			<div class="x_controls">
-				<textarea name="header_text" id="header_text" class="lang_code" rows="8" cols="42">{$module_info->header_text}</textarea>
+				<textarea name="header_text" id="header_text" class="x_full-width lang_code" rows="8" cols="42">{$module_info->header_text}</textarea>
 				<p id="header_text_help" class="x_help-block">{$lang->about_header_text}</p>
 			</div>
 		</div>
 		<div class="x_control-group">
 			<label class="x_control-label" for="lang_footer_text">{$lang->footer_text}</label>
 			<div class="x_controls">
-				<textarea name="footer_text" id="footer_text" class="lang_code" rows="8" cols="42">{$module_info->footer_text}</textarea>
+				<textarea name="footer_text" id="footer_text" class="x_full-width lang_code" rows="8" cols="42">{$module_info->footer_text}</textarea>
 				<p id="footer_text_help" class="x_help-block">{$lang->about_footer_text}</p>
 			</div>
 		</div>
@@ -121,9 +121,18 @@
 		<div class="x_control-group">
 			<label class="x_control-label">{$lang->mobile_view}</label>
 			<div class="x_controls">
-				<label class="x_inline" for="use_mobile"><input type="checkbox" name="use_mobile" id="use_mobile" value="Y" checked="checked"|cond="$module_info->use_mobile == 'Y'" /> {$lang->about_mobile_view}</label>
+				<label for="use_mobile_y" class="x_inline">
+					<input type="radio" name="use_mobile" id="use_mobile_y" value="Y" checked="checked"|cond="$module_info->use_mobile === 'Y'" />
+					{$lang->cmd_yes}
+				</label>
+				<label for="use_mobile_n" class="x_inline">
+					<input type="radio" name="use_mobile" id="use_mobile_n" value="N" checked="checked"|cond="$module_info->use_mobile !== 'Y'" />
+					{$lang->cmd_no}
+				</label>
+				<p class="x_help-block">{$lang->about_mobile_view}</p>
 			</div>
 		</div>
+		<div class="hide-if-not-mobile-view">
 		<div class="x_control-group">
 			<label class="x_control-label" for="mlayout_srl">{$lang->mobile_layout}</label>
 			<div class="x_controls">
@@ -169,16 +178,17 @@
 		<div class="x_control-group">
 			<label class="x_control-label" for="lang_mobile_header_text">{$lang->mobile_header_text}</label>
 			<div class="x_controls">
-				<textarea name="mobile_header_text" id="mobile_header_text" class="lang_code" rows="8" cols="42">{$module_info->mobile_header_text}</textarea>
+				<textarea name="mobile_header_text" id="mobile_header_text" class="x_full-width lang_code" rows="8" cols="42">{$module_info->mobile_header_text}</textarea>
 				<p id="mobile_header_text_help" class="x_help-block">{$lang->about_mobile_header_text}</p>
 			</div>
 		</div>
 		<div class="x_control-group">
 			<label class="x_control-label" for="lang_mobile_footer_text">{$lang->mobile_footer_text}</label>
 			<div class="x_controls">
-				<textarea name="mobile_footer_text" id="mobile_footer_text" class="lang_code" rows="8" cols="42">{$module_info->mobile_footer_text}</textarea>
+				<textarea name="mobile_footer_text" id="mobile_footer_text" class="x_full-width lang_code" rows="8" cols="42">{$module_info->mobile_footer_text}</textarea>
 				<p id="mobile_footer_text_help" class="x_help-block">{$lang->about_mobile_footer_text}</p>
 			</div>
+		</div>
 		</div>
 	</section>
 	<section class="section">
@@ -261,6 +271,13 @@
 	<section class="section">
 		<h1>{$lang->subtitle_advanced}</h1>
 		<div class="x_control-group">
+			<label class="x_control-label">{$lang->consultation}</label>
+			<div class="x_controls">
+				<label class="x_inline" for="consultation"><input type="checkbox" name="consultation" id="consultation" value="Y" checked="checked"|cond="$module_info->consultation == 'Y'" /> {$lang->use_consultation}</label>
+				<p class="x_help-block">{$lang->about_consultation}</p>
+			</div>
+		</div>
+		<div class="x_control-group">
 			<label class="x_control-label">{$lang->use_anonymous}</label>
 			<div class="x_controls">
 				<label class="x_inline" for="use_anonymous"><input type="checkbox" name="use_anonymous" id="use_anonymous" value="Y" checked="checked"|cond="$module_info->use_anonymous == 'Y'" /> {$lang->about_use_anonymous_part1}</label>
@@ -299,13 +316,6 @@
 			<div class="x_controls">
 				<input type="number" min="1" name="inline_data_url_limit" id="inline_data_url_limit" value="{$module_info->inline_data_url_limit ?: 64}" /> KB
 				<p class="x_help-block">{$lang->about_inline_data_url_limit}</p>
-			</div>
-		</div>
-		<div class="x_control-group">
-			<label class="x_control-label">{$lang->consultation}</label>
-			<div class="x_controls">
-				<label class="x_inline" for="consultation"><input type="checkbox" name="consultation" id="consultation" value="Y" checked="checked"|cond="$module_info->consultation == 'Y'" /> {$lang->use_consultation}</label>
-				<p class="x_help-block">{$lang->about_consultation}</p>
 			</div>
 		</div>
 		<div class="x_control-group">

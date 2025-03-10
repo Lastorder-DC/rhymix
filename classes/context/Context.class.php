@@ -317,13 +317,14 @@ class Context
 		$lang->loadDirectory(RX_BASEDIR . 'common/lang', 'common');
 		$lang->loadDirectory(RX_BASEDIR . 'modules/module/lang', 'module');
 		self::setLangType(self::$_instance->lang_type = $lang_type);
-		self::set('lang', self::$_instance->lang = $lang);
 
 		// Set global variables for backward compatibility.
 		$GLOBALS['oContext'] = self::$_instance;
 		$GLOBALS['__Context__'] = &self::$_user_vars;
 		$GLOBALS['_time_zone'] = config('locale.default_timezone');
 		$GLOBALS['lang'] = &$lang;
+		self::$_user_vars->lang = $lang;
+		self::$_instance->lang = $lang;
 
 		// set session handler
 		if(self::isInstalled() && config('session.use_db'))
@@ -1488,9 +1489,18 @@ class Context
 		}
 		foreach($val as $_key => $_val)
 		{
-			if(is_array($_val))
+			if($is_array)
 			{
-				$_val = self::_filterRequestVar($key, $_val);
+				if(in_array($key, array('mid', 'vid', 'act', 'module')))
+				{
+					self::$_instance->security_check = 'DENY ALL';
+					self::$_instance->security_check_detail = 'ERR_UNSAFE_VAR';
+					$_val = null;
+				}
+				else
+				{
+					$_val = self::_filterRequestVar($key, $_val);
+				}
 			}
 			elseif($_val = trim($_val))
 			{

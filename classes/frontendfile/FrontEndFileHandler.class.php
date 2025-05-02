@@ -54,12 +54,37 @@ class FrontEndFileHandler extends Handler
 	public $jsBodyMapIndex = array();
 
 	/**
+	 * Logging
+	 */
+	protected $_log_enabled = false;
+	protected $_log_entries = [];
+
+	/**
+	 * Singleton
+	 */
+	protected static $_instance = null;
+
+	/**
+	 * Get singleton instance
+	 *
+	 * @return self
+	 */
+	public static function getInstance(): self
+	{
+		if (self::$_instance === null)
+		{
+			self::$_instance = new self();
+		}
+		return self::$_instance;
+	}
+
+	/**
 	 * Check SSL
 	 *
 	 * @return bool If using ssl returns true, otherwise returns false.
      * @deprecated
 	 */
-	public function isSsl()
+	public static function isSsl()
 	{
 		return \RX_SSL;
 	}
@@ -91,6 +116,10 @@ class FrontEndFileHandler extends Handler
 		if(!is_array($args))
 		{
 			$args = array($args);
+		}
+		if ($this->_log_enabled)
+		{
+			$this->_log_entries[] = $args;
 		}
 
 		// Replace obsolete paths with current paths.
@@ -250,6 +279,26 @@ class FrontEndFileHandler extends Handler
 		}
 
 		return $file;
+	}
+
+	/**
+	 * Start logging.
+	 */
+	public function startLog()
+	{
+		$this->_log_enabled = true;
+		$this->_log_entries = [];
+	}
+
+	/**
+	 * End logging and return the log entries.
+	 *
+	 * @return array
+	 */
+	public function endLog(): array
+	{
+		$this->_log_enabled = false;
+		return $this->_log_entries;
 	}
 
 	/**

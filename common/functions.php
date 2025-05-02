@@ -3,7 +3,7 @@
 /**
  * Function library for Rhymix
  *
- * Copyright (c) Rhymix Developers and Contributors
+ * Copyright (c) Poesis Inc. and Contributors
  */
 
 /**
@@ -205,7 +205,7 @@ function escape($str, bool $double_escape = true, bool $except_lang_code = false
  */
 function escape_css(string $str): string
 {
-	return preg_replace('/[^a-zA-Z0-9_.#\/-]/', '', (string)$str);
+	return preg_replace('/[^a-zA-Z0-9_.,#%\/\'()\x20-]/', '', (string)$str);
 }
 
 /**
@@ -680,7 +680,14 @@ function utf8_mbencode($str): string
  */
 function utf8_normalize_spaces($str, bool $multiline = false): string
 {
-	return $multiline ? preg_replace('/((?!\x0A)[\pZ\pC])+/u', ' ', (string)$str) : preg_replace('/[\pZ\pC]+/u', ' ', (string)$str);
+	if ($multiline)
+	{
+		return preg_replace(['/((?!\x0A)[\pZ\pC])+/u', '/\x20*\x0A\x20*/'], [' ', "\n"], (string)$str);
+	}
+	else
+	{
+		return preg_replace('/[\pZ\pC]+/u', ' ', (string)$str);
+	}
 }
 
 /**

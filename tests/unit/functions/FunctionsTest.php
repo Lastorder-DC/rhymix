@@ -50,8 +50,10 @@ class FunctionsTest extends \Codeception\Test\Unit
 		$this->assertEquals('$user_lang-&gt;userLang1234567890', escape('$user_lang->userLang1234567890', true, false));
 		$this->assertEquals('$user_lang->userLang1234567890', escape('$user_lang->userLang1234567890', true, true));
 
-		$this->assertEquals('expressionalertXSS', escape_css('expression:alert("XSS")'));
+		$this->assertEquals('expressionalert(XSS)', escape_css('expression:alert("XSS")'));
 		$this->assertEquals('#123456', escape_css('#123456'));
+		$this->assertEquals('16px/160% Segoe UI, sans-serif font-style', escape_css('16px/160% Segoe UI, sans-serif; font-style'));
+		$this->assertEquals('box-shadow(0 1px 2px rgba(0, 0, 0, 0.15)', escape_css('box-shadow(0 1px 2px rgba(0, 0, 0, "0.15")'));
 
 		$this->assertEquals('hello\\\\world', escape_js('hello\\world'));
 		$this->assertEquals('\u003Cbr \/\u003E', escape_js('<br />'));
@@ -226,6 +228,8 @@ class FunctionsTest extends \Codeception\Test\Unit
 
 		$this->assertEquals("Weird spaces are in this string", utf8_normalize_spaces("Weird\x20spaces\xe2\x80\x80are\xe2\x80\x84in\xe2\x80\x86\xe2\x80\x8bthis\x0astring"));
 		$this->assertEquals("Weird spaces are in this\nstring", utf8_normalize_spaces("Weird\x20spaces\xe2\x80\x80are\xe2\x80\x84in\xe2\x80\x86\xe2\x80\x8bthis\x0astring", true));
+		$this->assertEquals("Stupid Windows\nLine Breaks", utf8_normalize_spaces("Stupid Windows \r\n Line Breaks", true));
+		$this->assertEquals("Multiple\nCRLF\n\nsequences", utf8_normalize_spaces("Multiple \r\nCRLF\r\n\t\r\n sequences", true));
 		$this->assertEquals("Trimmed", utf8_trim("\x20\xe2\x80\x80Trimmed\xe2\x80\x84\xe2\x80\x86\xe2\x80\x8b"));
 		$this->assertEquals("Trimmed", utf8_trim("\x20\xe2\x80\x80Trimmed\x0a\x0c\x07\x09"));
 	}

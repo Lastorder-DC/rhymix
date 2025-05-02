@@ -1194,7 +1194,7 @@ class FileController extends File
 		{
 			$adjusted['type'] = 'mp4';
 		}
-		elseif (!empty($config->image_autoconv[$image_info['type']]))
+		elseif (!empty($config->image_autoconv[$image_info['type']]) && tobool($config->image_autoconv[$image_info['type']]))
 		{
 			$adjusted['type'] = $config->image_autoconv[$image_info['type']];
 		}
@@ -1723,14 +1723,18 @@ class FileController extends File
 		// Get a full list of attachments
 		$args = new stdClass;
 		$args->module_srl = $module_srl;
-		$output = executeQueryArray('file.getModuleFiles', $args);
-		if(!$output->toBool() || empty($file_list = $output->data))
+		$output = executeQueryArray('file.getModuleFilesProper', $args);
+		if (!$output->toBool())
 		{
 			return $output;
 		}
+		if (!$output->data)
+		{
+			return;
+		}
 
-		// Delete the file
-		return $this->deleteFile($file_list);
+		// Delete each file.
+		return $this->deleteFile($output->data);
 	}
 
 	/**
@@ -1971,8 +1975,16 @@ class FileController extends File
 	function triggerMoveDocument($obj)
 	{
 		$obj->upload_target_srls = $obj->document_srls;
-		executeQuery('file.updateFileModule', $obj);
-		executeQuery('file.updateFileModuleComment', $obj);
+		$output = executeQuery('file.updateFileModule', $obj);
+		if (!$output->toBool())
+		{
+			return $output;
+		}
+		$output = executeQuery('file.updateFileModuleComment', $obj);
+		if (!$output->toBool())
+		{
+			return $output;
+		}
 	}
 
 	function triggerAddCopyDocument(&$obj)

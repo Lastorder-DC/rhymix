@@ -205,6 +205,7 @@
 			var menu_id = params.menu_id;
 			var menus = ret_obj.menus;
 			var html = "";
+			var isMobile = navigator.userAgent.match(/mobile/i);
 
 			if(this.loaded_popup_menus[menu_id]) {
 				html = this.loaded_popup_menus[menu_id];
@@ -234,7 +235,11 @@
 							var matches = [];
 							/* if(icon) styleText = " style=\"background-image:url('"+icon+"')\" "; */
 							if (target === 'popup') {
-								click_str = 'onclick="popopen(this.href, \''+target+'\'); return false;"';
+								if (isMobile) {
+									click_str = 'onclick="openFullScreenIframe(this.href, \''+target+'\'); return false;"';
+								} else {
+									click_str = 'onclick="popopen(this.href, \''+target+'\'); return false;"';
+								}
 								classText += 'popup ';
 							} else if (target === 'javascript') {
 								click_str = 'onclick="'+url+'; return false; "';
@@ -738,6 +743,23 @@ function zbxe_folder_close(id) {
 }
 
 /**
+ * 팝업창 대신 전체 화면 iframe을 띄우는 함수
+ */
+function openFullScreenIframe(url, target) {
+	const iframe = document.createElement('iframe');
+	const iframe_sequence = String(Date.now()) + Math.round(Math.random() * 1000000);
+	iframe.setAttribute('id', '_rx_iframe_' + iframe_sequence);
+	iframe.setAttribute('name', target || ('_rx_iframe_' + iframe_sequence))
+	iframe.setAttribute('src', url + '&iframe_sequence=' + iframe_sequence);
+	iframe.setAttribute('width', '100%');
+	iframe.setAttribute('height', '100%');
+	iframe.setAttribute('frameborder', '0');
+	iframe.setAttribute('scrolling', 'no');
+	iframe.setAttribute('style', 'position:fixed; top:0; left:0; width:100%; height:100%; z-index:999999999; background-color: #fff; overflow-y:auto');
+	$(document.body).append(iframe);
+}
+
+/**
  * @brief 팝업의 경우 내용에 맞춰 현 윈도우의 크기를 조절해줌
  * 팝업의 내용에 맞게 크기를 늘리는 것은... 쉽게 되지는 않음.. ㅡ.ㅜ
  * popup_layout 에서 window.onload 시 자동 요청됨.
@@ -930,7 +952,12 @@ var objForSavedDoc = null;
 function doDocumentLoad(obj) {
 	// 저장된 게시글 목록 불러오기
 	objForSavedDoc = obj.form;
-	popopen(request_uri.setQuery('module','document').setQuery('act','dispTempSavedList'));
+	var popup_url = request_uri.setQuery('module','document').setQuery('act','dispTempSavedList');
+	if (navigator.userAgent.match(/mobile/i)) {
+		openFullScreenIframe(popup_url);
+	} else {
+		popopen(popup_url);
+	}
 }
 
 /* 저장된 게시글의 선택 */
@@ -940,7 +967,7 @@ function doDocumentSelect(document_srl, module) {
 		return;
 	}
 
-	if(module===undefined) {
+	if(module === undefined) {
 		module = 'document';
 	}
 
@@ -961,7 +988,7 @@ function doDocumentSelect(document_srl, module) {
 			opener.location.href = url;
 			break;
 		default :
-			opener.location.href = opener.current_url.setQuery('document_srl', document_srl).setQuery('act', 'dispBoardWrite');
+			opener.location.href = opener.current_url.setQuery('act', 'dispBoardWrite').setQuery('document_srl', document_srl);
 			break;
 	}
 	window.close();

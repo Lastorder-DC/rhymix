@@ -210,7 +210,11 @@ function openComponent(component_name, editor_sequence, manual_url) {
 	if(typeof(manual_url)!="undefined" && manual_url) popup_url += "&manual_url="+escape(manual_url);
 	if(typeof(current_mid)!="undefined" && current_mid) popup_url += "&mid="+escape(current_mid);
 
-	popopen(popup_url, 'editorComponent');
+	if (navigator.userAgent.match(/mobile/i)) {
+		openFullScreenIframe(popup_url, 'editorComponent');
+	} else {
+		popopen(popup_url, 'editorComponent');
+	}
 }
 
 // 더블클릭 이벤트 발생시에 본문내에 포함된 컴포넌트를 찾는 함수
@@ -238,7 +242,12 @@ function editorSearchComponent(evt) {
 		editorPrevNode = obj;
 
 		if(editorMode[editor_sequence]=='html') return;
-		popopen(request_uri+"?module=widget&act=dispWidgetGenerateCodeInPage&selected_widget="+widget+"&module_srl="+editor_sequence,'GenerateCodeInPage');
+		var popup_url = request_uri+"?module=widget&act=dispWidgetGenerateCodeInPage&selected_widget="+widget+"&module_srl="+editor_sequence
+		if (navigator.userAgent.match(/mobile/i)) {
+			openFullScreenIframe(popup_url, 'GenerateCodeInPage');
+		} else {
+			popopen(popup_url, 'GenerateCodeInPage');
+		}
 		return;
 	}
 

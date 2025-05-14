@@ -391,7 +391,7 @@ class importerAdminController extends importer
 			$obj->signature = base64_decode($xmlObj->member->signature->body);
 			$obj->regdate = base64_decode($xmlObj->member->regdate->body);
 			$obj->last_login = base64_decode($xmlObj->member->last_login->body);
-
+			$obj->extra_vars = new stdClass();
 			if($xmlObj->member->extra_vars)
 			{
 				foreach($xmlObj->member->extra_vars as $key => $val)
@@ -416,7 +416,6 @@ class importerAdminController extends importer
 			{
 				$obj->email_address = $obj->user_id . '@example.com';
 			}
-			list($obj->email_id, $obj->email_host) = explode('@', $obj->email);
 			// Set the mailing option
 			if($obj->allow_mailing!='Y') $obj->allow_mailing = 'N';
 			// Set the message option
@@ -426,10 +425,8 @@ class importerAdminController extends importer
 			if(!$obj->last_login) $obj->last_login = $obj->regdate;
 			// Set the list order
 			$obj->list_order = -1 * $obj->member_srl;
-			// List extra vars
-			$extra_vars = $obj->extra_vars;
-			unset($obj->extra_vars);
-			$obj->extra_vars = serialize($extra_vars);
+			// Serialize extra vars
+			$obj->extra_vars = serialize($obj->extra_vars);
 			// Check if the same user ID exists
 			$args = new stdClass;
 			$args->user_id = $obj->user_id;
@@ -455,9 +452,18 @@ class importerAdminController extends importer
 				$obj->email_address = $obj->user_id . '@example.com';
 			}
 
+			list($obj->email_id, $obj->email_host) = explode('@', $obj->email_address);
+			if (!$obj->email_id)
+			{
+				$obj->email_id = '';
+			}
+			if (!$obj->email_host)
+			{
+				$obj->email_host = '';
+			}
+
 			// Add a member
 			$output = executeQuery('member.insertMember', $obj);
-
 			if($output->toBool() && !($obj->password))
 			{
 				// Send a mail telling the user to reset his password.

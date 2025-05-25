@@ -40,7 +40,7 @@ $(function() {
 	}));
 
 	// Define a function for adding debug data to the panel.
-	window.rhymix_debug_add_data = function(data, open) {
+	Rhymix.addDebugData = function(data, open) {
 
 		// Define loop variables.
 		var i, j, entry, num, cnt, backtrace, description;
@@ -238,15 +238,15 @@ $(function() {
 	};
 
 	// Add debug data from the current request.
-	if (window.rhymix_debug_content) {
-		window.rhymix_debug_content.page_title = 'MAIN PAGE';
-		rhymix_debug_add_data(window.rhymix_debug_content, true);
+	if (Rhymix.currentDebugData) {
+		Rhymix.currentDebugData.page_title = 'MAIN PAGE';
+		Rhymix.addDebugData(Rhymix.currentDebugData, true);
 	}
 
 	// Add debug data from pending AJAX requests.
-	if (window.rhymix_debug_pending_data) {
-		while (window.rhymix_debug_pending_data.length) {
-			rhymix_debug_add_data(window.rhymix_debug_pending_data.shift());
+	if (Rhymix.pendingDebugData) {
+		while (Rhymix.pendingDebugData.length) {
+			Rhymix.addDebugData(Rhymix.pendingDebugData.shift());
 		}
 	}
 });

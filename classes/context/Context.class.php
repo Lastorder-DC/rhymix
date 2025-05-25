@@ -1120,6 +1120,14 @@ class Context
 			self::$_instance->security_check = 'DENY ALL';
 			self::$_instance->security_check_detail = 'ERR_UNSAFE_ENV';
 		}
+
+		if (PHP_VERSION_ID < 80000)
+		{
+			libxml_disable_entity_loader(true);
+		}
+		libxml_set_external_entity_loader(function($a, $b, $c) {
+			return null;
+		});
 	}
 
 	/**
@@ -1261,10 +1269,6 @@ class Context
 					$GLOBALS['HTTP_RAW_POST_DATA'] = '';
 					return;
 				}
-				if (PHP_VERSION_ID < 80000)
-				{
-					libxml_disable_entity_loader(true);
-				}
 				$params = Rhymix\Framework\Parsers\XMLRPCParser::parse($GLOBALS['HTTP_RAW_POST_DATA']) ?: [];
 			}
 			elseif($request_method === 'JSON')
@@ -1339,7 +1343,7 @@ class Context
 					unset($_FILES[$key]);
 					continue;
 				}
-				$val['name'] = str_replace('&amp;', '&', escape($val['name'], false));
+				$val['name'] = Rhymix\Framework\Filters\FilenameFilter::clean($val['name']);
 				self::set($key, $val, true);
 				self::set('is_uploaded', true);
 				self::$_instance->is_uploaded = true;
@@ -1365,7 +1369,7 @@ class Context
 						break;
 					}
 					$file = array();
-					$file['name'] = str_replace('&amp;', '&', escape($val['name'][$i], false));
+					$file['name'] = Rhymix\Framework\Filters\FilenameFilter::clean($val['name'][$i]);
 					$file['type'] = $val['type'][$i];
 					$file['tmp_name'] = $val['tmp_name'][$i];
 					$file['error'] = $val['error'][$i];

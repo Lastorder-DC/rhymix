@@ -249,7 +249,7 @@ class ModuleObject extends BaseObject
 	 */
 	public function setPrivileges()
 	{
-		if(!$this->user->isAdmin())
+		if (!$this->user->isAdmin())
 		{
 			// Get privileges(granted) information for target module by <permission check> of module.xml
 			if(($permission = $this->xml_info->action->{$this->act}->permission) && $permission->check_var)
@@ -278,33 +278,28 @@ class ModuleObject extends BaseObject
 				foreach($check_module_srl as $target_srl)
 				{
 					// Get privileges(granted) information of current user for target module
-					if(($grant = ModuleModel::getInstance()->getPrivilegesBySrl($target_srl, $permission->check_type)) === false)
+					$check_grant = ModuleModel::getPrivilegesBySrl($target_srl, $permission->check_type);
+					if ($check_grant === false)
 					{
 						return false;
 					}
 
 					// Check permission
-					if(!$this->checkPermission($grant, $this->user))
+					if(!$this->checkPermission($check_grant, $this->user, $failed_requirement))
 					{
-						$this->stop($this->user->isMember() ? 'msg_not_permitted_act' : 'msg_not_logged');
+						$this->stop($this->_generatePermissionError($failed_requirement));
 						return false;
 					}
 				}
 			}
 		}
 
-		// If no privileges(granted) information, check permission by privileges(granted) information for current module
-		if(!isset($grant))
+		// Check permission based on the grant information for the current module.
+		$grant = ModuleModel::getInstance()->getGrant($this->module_info, $this->user, $this->xml_info);
+		if(!$this->checkPermission($grant, $this->user, $failed_requirement))
 		{
-			// Get privileges(granted) information of current user for current module
-			$grant = ModuleModel::getInstance()->getGrant($this->module_info, $this->user, $this->xml_info);
-
-			// Check permission
-			if(!$this->checkPermission($grant, $this->user))
-			{
-				$this->stop($this->user->isMember() ? 'msg_not_permitted_act' : 'msg_not_logged');
-				return false;
-			}
+			$this->stop($this->_generatePermissionError($failed_requirement));
+			return false;
 		}
 
 		// If member action, grant access for log-in, sign-up, member pages
@@ -313,7 +308,7 @@ class ModuleObject extends BaseObject
 			$grant->access = true;
 		}
 
-		// Set privileges(granted) variables
+		// Set aliases to grant object
 		$this->grant = $grant;
 		Context::set('grant', $grant);
 
@@ -325,9 +320,10 @@ class ModuleObject extends BaseObject
 	 *
 	 * @param object $grant privileges(granted) information of user
 	 * @param object $member_info member information
+	 * @param string|array &$failed_requirement
 	 * @return bool
 	 */
-	public function checkPermission($grant = null, $member_info = null)
+	public function checkPermission($grant = null, $member_info = null, &$failed_requirement = '')
 	{
 		// Get logged-in member information
 		if(!$member_info)
@@ -356,21 +352,50 @@ class ModuleObject extends BaseObject
 			$permission = 'root';
 		}
 
-		// If permission is not or 'guest', Pass
-		if(empty($permission) || $permission == 'guest')
+		// If there is no permission or eveyone is allowed, pass
+		if (empty($permission) || $permission === 'guest' || $permission === 'everyone')
 		{
 			return true;
 		}
-		// If permission is 'member', check logged-in
-		else if($permission == 'member')
+
+		// If permission is 'member', the user must be logged in
+		if ($permission === 'member')
 		{
-			if($member_info->member_srl)
+			if ($member_info->member_srl)
 			{
 				return true;
 			}
+			else
+			{
+				$failed_requirement = 'member';
+				return false;
+			}
 		}
+
+		// If permission is 'not_member', the user must be logged out
+		if ($permission === 'not_member' || $permission === 'not-member')
+		{
+			if (!$member_info->member_srl || $grant->manager)
+			{
+				return true;
+			}
+			else
+			{
+				$failed_requirement = 'not_member';
+				return false;
+			}
+		}
+
+		// If permission is 'root', false
+		// Because an administrator who have root privilege(granted) was passed already
+		if ($permission == 'root')
+		{
+			$failed_requirement = 'root';
+			return false;
+		}
+
 		// If permission is 'manager', check 'is user have manager privilege(granted)'
-		else if(preg_match('/^(manager(?::(.+))?|([a-z0-9\_]+)-managers)$/', $permission, $type))
+		if (preg_match('/^(manager(?::(.+))?|([a-z0-9\_]+)-managers)$/', $permission, $type))
 		{
 			// If permission is manager(:scope), check manager privilege and scope
 			if ($grant->manager)
@@ -404,30 +429,69 @@ class ModuleObject extends BaseObject
 					return true;
 				}
 			}
-		}
-		// If permission is 'root', false
-		// Because an administrator who have root privilege(granted) was passed already
-		else if($permission == 'root')
-		{
+
+			$failed_requirement = 'manager';
 			return false;
 		}
-		// If grant name, check the privilege(granted) of the user
-		else if($grant_names = explode(',', $permission))
-		{
-			$privilege_list = array_keys((array) $this->xml_info->grant);
 
-			foreach($grant_names as $name)
+		// Check grant name
+		// If multiple names are given, all of them must pass.
+		elseif ($grant_names = array_map('trim', explode(',', $permission)))
+		{
+			foreach ($grant_names as $name)
 			{
-				if(!in_array($name, $privilege_list) || !$grant->$name)
+				if (!isset($grant->{$name}))
 				{
 					return false;
 				}
+				if (!$grant->{$name})
+				{
+					$failed_requirement = $grant->whocan($name);
+					return false;
+				}
 			}
-
 			return true;
 		}
 
 		return false;
+	}
+
+	/**
+	 * Generate an error message for a failed permission.
+	 *
+	 * @param mixed $failed_requirement
+	 * @return string
+	 */
+	protected function _generatePermissionError($failed_requirement)
+	{
+		if ($failed_requirement === 'member' || !$this->user->isMember())
+		{
+			return 'msg_not_logged';
+		}
+		elseif ($failed_requirement === 'not_member')
+		{
+			return 'msg_required_not_logged';
+		}
+		elseif ($failed_requirement === 'manager' || $failed_requirement === 'root')
+		{
+			return 'msg_administrator_only';
+		}
+		elseif (is_array($failed_requirement) && count($failed_requirement))
+		{
+			if (class_exists('PointModel'))
+			{
+				$min_level = PointModel::getMinimumLevelForGroup($failed_requirement);
+				if ($min_level)
+				{
+					return sprintf(lang('member.msg_required_minimum_level'), $min_level);
+				}
+			}
+			return 'member.msg_required_specific_group';
+		}
+		else
+		{
+			return 'msg_not_permitted_act';
+		}
 	}
 
 	/**

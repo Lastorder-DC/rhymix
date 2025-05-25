@@ -18,12 +18,6 @@
 	window.show_leaving_warning = false;
 
 	/**
-	 * This variable becomes true when the user tries to navigate away from the page.
-	 * It should not be manually edited.
-	 */
-	var page_unloading = false;
-
-	/**
 	 * Function for compatibility with XE's exec_xml()
 	 */
 	window.exec_xml = $.exec_xml = function(module, act, params, callback_success, return_fields, callback_success_arg, fo_obj) {
@@ -66,10 +60,10 @@
 			// Add debug information.
 			if (data._rx_debug) {
 				data._rx_debug.page_title = "AJAX : " + params.module + "." + params.act;
-				if (window.rhymix_debug_add_data) {
-					window.rhymix_debug_add_data(data._rx_debug);
+				if (Rhymix.addDebugData) {
+					Rhymix.addDebugData(data._rx_debug);
 				} else {
-					window.rhymix_debug_pending_data.push(data._rx_debug);
+					Rhymix.pendingDebugData.push(data._rx_debug);
 				}
 			}
 
@@ -127,7 +121,7 @@
 			}
 
 			// If the user is navigating away, don't do anything.
-			if (xhr.status == 0 && page_unloading) {
+			if (xhr.status == 0 && Rhymix.unloading) {
 				return;
 			}
 
@@ -232,10 +226,10 @@
 			// Add debug information.
 			if (data._rx_debug) {
 				data._rx_debug.page_title = "AJAX : " + request_info;
-				if (window.rhymix_debug_add_data) {
-					window.rhymix_debug_add_data(data._rx_debug);
+				if (Rhymix.addDebugData) {
+					Rhymix.addDebugData(data._rx_debug);
 				} else {
-					window.rhymix_debug_pending_data.push(data._rx_debug);
+					Rhymix.pendingDebugData.push(data._rx_debug);
 				}
 			}
 
@@ -293,7 +287,7 @@
 		var errorHandler = function(xhr, textStatus) {
 
 			// If the user is navigating away, don't do anything.
-			if (xhr.status == 0 && page_unloading) {
+			if (xhr.status == 0 && Rhymix.unloading) {
 				return;
 			}
 
@@ -379,49 +373,10 @@
 	};
 
 	/**
-	 * Function for AJAX submission of arbitrary forms.
-	 */
-	XE.ajaxForm = function(form, callback_success, callback_error) {
-		form = $(form);
-		// Get success and error callback functions.
-		if (typeof callback_success === 'undefined') {
-			callback_success = form.data('callbackSuccess');
-			if (callback_success && window[callback_success] && $.isFunction(window[callback_success])) {
-				callback_success = window[callback_success];
-			} else {
-				callback_success = function(data) {
-					if (data.message && data.message !== 'success') {
-						rhymix_alert(data.message, data.redirect_url);
-					}
-					if (data.redirect_url) {
-						redirect(data.redirect_url);
-					}
-				};
-			}
-		}
-		if (typeof callback_error === 'undefined') {
-			callback_error = form.data('callbackError');
-			if (callback_error && window[callback_error] && $.isFunction(window[callback_error])) {
-				callback_error = window[callback_error];
-			} else {
-				callback_error = null;
-			}
-		}
-		window.exec_json('raw', new FormData(form[0]), callback_success, callback_error);
-	};
-	$(document).on('submit', 'form.rx_ajax', function(event) {
-		// Abort if the form already has a 'target' attribute.
-		if (!$(this).attr('target')) {
-			event.preventDefault();
-			XE.ajaxForm(this);
-		}
-	});
-
-	/**
 	 * Empty placeholder for beforeUnload handler.
 	 */
 	var beforeUnloadHandler = function() {
-		page_unloading = true;
+		Rhymix.unloading = true;
 		return "";
 	};
 
@@ -434,10 +389,6 @@
 				$(window).bind("beforeunload", beforeUnloadHandler);
 			}).bind("ajaxStop cancel_confirm", function() {
 				$(window).unbind("beforeunload", beforeUnloadHandler);
-			});
-		} else {
-			$(window).on('beforeunload', function() {
-				page_unloading = true;
 			});
 		}
 	});

@@ -197,16 +197,19 @@ class addonAdminController extends addonController
 	 */
 	function procAddonAdminSetupAddon()
 	{
-		$args = Context::getRequestVars();
-		$module = $args->module;
-		$addon_name = $args->addon_name;
-		unset($args->module);
-		unset($args->act);
-		unset($args->addon_name);
-		unset($args->body);
-		unset($args->error_return_url);
+		$vars = Context::getRequestVars();
+		$module = $vars->module;
+		$addon_name = $vars->addon_name;
+		$args = new stdClass();
 
 		$site_module_info = Context::get('site_module_info');
+		$addon_info = AddonAdminModel::getInstance()->getAddonInfoXml($addon_name, $site_module_info->site_srl, 'site');
+		foreach ($addon_info->extra_vars as $key => $val)
+		{
+			$args->{$key} = $vars->{$key} ?? '';
+		}
+		$args->xe_run_method = $vars->xe_run_method ?? '';
+		$args->mid_list = $vars->mid_list ?? [];
 
 		$output = $this->doSetup($addon_name, $args, $site_module_info->site_srl, 'site');
 		if(!$output->toBool())
@@ -234,6 +237,29 @@ class addonAdminController extends addonController
 	 */
 	function doInsert($addon, $site_srl = 0, $gtype = 'site', $isUsed = 'N', $extra_vars = null)
 	{
+		if (!is_object($extra_vars))
+		{
+			$extra_vars = new stdClass();
+		}
+		if (!isset($extra_vars->xe_run_method))
+		{
+			$extra_vars->xe_run_method = 'run_selected';
+		}
+		if (!isset($extra_vars->mid_list) || !is_array($extra_vars->mid_list))
+		{
+			$extra_vars->mid_list = [];
+		}
+
+		$xml_file = RX_BASEDIR . 'addons/' . $addon . '/conf/info.xml';
+		$addon_info = Rhymix\Framework\Parsers\AddonInfoParser::loadXML($xml_file, $addon);
+		foreach ($addon_info->extra_vars as $key => $val)
+		{
+			if (!isset($extra_vars->$key))
+			{
+				$extra_vars->$key = $val->default;
+			}
+		}
+
 		$args = new stdClass;
 		$args->addon = $addon;
 		if (strlen($isUsed) == 2)

@@ -11,6 +11,14 @@ class Queue
 	 * Static properties.
 	 */
 	protected static $_drivers = [];
+	protected static $_signal = 0;
+
+	/**
+	 * Priority constants.
+	 */
+	public const PRIORITY_HIGH = 'high';
+	public const PRIORITY_NORMAL = 'normal';
+	public const PRIORITY_LOW = 'low';
 
 	/**
 	 * Add a custom Queue driver.
@@ -120,9 +128,10 @@ class Queue
 	 * @param string $handler
 	 * @param ?object $args
 	 * @param ?object $options
+	 * @param ?string $priority
 	 * @return int
 	 */
-	public static function addTask(string $handler, ?object $args = null, ?object $options = null): int
+	public static function addTask(string $handler, ?object $args = null, ?object $options = null, ?string $priority = null): int
 	{
 		$driver_name = config('queue.driver');
 		if (!$driver_name)
@@ -136,7 +145,7 @@ class Queue
 			throw new Exceptions\FeatureDisabled('Queue not configured');
 		}
 
-		return $driver->addTask($handler, $args, $options);
+		return $driver->addTask($handler, $args, $options, $priority);
 	}
 
 	/**
@@ -149,9 +158,10 @@ class Queue
 	 * @param string $handler
 	 * @param ?object $args
 	 * @param ?object $options
+	 * @param ?string $priority
 	 * @return int
 	 */
-	public static function addTaskAt(int $time, string $handler, ?object $args = null, ?object $options = null): int
+	public static function addTaskAt(int $time, string $handler, ?object $args = null, ?object $options = null, ?string $priority = null): int
 	{
 		if (!config('queue.enabled'))
 		{
@@ -160,7 +170,7 @@ class Queue
 
 		// This feature always uses the DB driver.
 		$driver = self::getDbDriver();
-		return $driver->addTaskAt($time, $handler, $args, $options);
+		return $driver->addTaskAt($time, $handler, $args, $options, $priority);
 	}
 
 	/**
@@ -337,6 +347,11 @@ class Queue
 			foreach ($tasks as $task)
 			{
 				self::_executeTask($task);
+
+				if (self::signalReceived())
+				{
+					return;
+				}
 			}
 		}
 		if ($index === 1 || $count < 2)
@@ -347,6 +362,11 @@ class Queue
 			{
 				$db_driver->updateLastRunTimestamp($task);
 				self::_executeTask($task);
+
+				if (self::signalReceived())
+				{
+					return;
+				}
 			}
 		}
 
@@ -359,6 +379,11 @@ class Queue
 			if ($task)
 			{
 				self::_executeTask($task);
+
+				if (self::signalReceived())
+				{
+					return;
+				}
 			}
 
 			// If the timeout is imminent, break the loop.
@@ -373,6 +398,12 @@ class Queue
 			if (!$task && $loop_elapsed_time < 1)
 			{
 				usleep(intval((1 - $loop_elapsed_time) * 1000000));
+			}
+
+			// Check for a signal again after the sleep.
+			if (self::signalReceived())
+			{
+				break;
 			}
 		}
 	}
@@ -478,5 +509,27 @@ class Queue
 				$th->getLine(),
 			]));
 		}
+	}
+
+	/**
+	 * Signal handler.
+	 *
+	 * @param int $signal
+	 * @param mixed $siginfo
+	 * @return void
+	 */
+	public static function signalHandler(int $signal, $siginfo): void
+	{
+		self::$_signal = $signal;
+	}
+
+	/**
+	 * Has a signal been received?
+	 *
+	 * @return int
+	 */
+	public static function signalReceived(): int
+	{
+		return self::$_signal;
 	}
 }

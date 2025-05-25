@@ -55,19 +55,16 @@ class DocumentModel extends Document
 			return;
 		}
 
-		static $checked = array();
-		static $module_extra_keys = array();
-
 		// check documents
 		$document_srls = array();
 		foreach($_document_list as $document_srl => $oDocument)
 		{
-			if(isset($checked[$document_srl]) || !($oDocument instanceof documentItem) || !$oDocument->isExists())
+			if(isset($GLOBALS['XE_EXTRA_CHK'][$document_srl]) || !($oDocument instanceof documentItem) || !$oDocument->isExists())
 			{
 				continue;
 			}
 
-			$checked[$document_srl] = true;
+			$GLOBALS['XE_EXTRA_CHK'][$document_srl] = true;
 			$document_srls[] = $document_srl;
 		}
 
@@ -102,16 +99,16 @@ class DocumentModel extends Document
 			if(!isset($GLOBALS['XE_EXTRA_VARS'][$document_srl]))
 			{
 				// get extra keys of the module
-				if(!isset($module_extra_keys[$module_srl]))
+				if(!isset($GLOBALS['XE_EXTRA_KEYS'][$module_srl]))
 				{
-					$module_extra_keys[$module_srl] = self::getExtraKeys($module_srl);
+					$GLOBALS['XE_EXTRA_KEYS'][$module_srl] = self::getExtraKeys($module_srl);
 				}
 
 				// set extra variables of the document
-				if($module_extra_keys[$module_srl])
+				if(!empty($GLOBALS['XE_EXTRA_KEYS'][$module_srl]))
 				{
 					$document_extra_vars = array();
-					foreach($module_extra_keys[$module_srl] as $idx => $key)
+					foreach($GLOBALS['XE_EXTRA_KEYS'][$module_srl] as $idx => $key)
 					{
 						$document_extra_vars[$idx] = clone($key);
 
@@ -1491,10 +1488,12 @@ class DocumentModel extends Document
 				case 'nick_name' :
 				case 'email_address' :
 				case 'homepage' :
-				case 'regdate' :
-				case 'last_update' :
 				case 'ipaddress' :
 					$args->{'s_' . $search_target} = str_replace(' ', '%', $search_keyword);
+					break;
+				case 'regdate' :
+				case 'last_update' :
+					$args->{'s_' . $search_target} = preg_replace('/[^\d]/', '', $search_keyword);
 					break;
 				case 'member_srl' :
 				case 'readed_count' :

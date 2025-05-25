@@ -1780,6 +1780,7 @@ class DocumentController extends Document
 			$output = executeQuery('document.updateDocumentExtraVar', $obj);
 		}
 
+		unset($GLOBALS['XE_EXTRA_KEYS'][$module_srl]);
 		Rhymix\Framework\Cache::delete("site_and_module:module_document_extra_keys:$module_srl");
 		return $output;
 	}
@@ -1836,6 +1837,7 @@ class DocumentController extends Document
 
 		$oDB->commit();
 
+		unset($GLOBALS['XE_EXTRA_KEYS'][$module_srl]);
 		Rhymix\Framework\Cache::delete("site_and_module:module_document_extra_keys:$module_srl");
 		return new BaseObject();
 	}
@@ -3714,6 +3716,7 @@ Content;
 		if ($type === 'all' || $type === 'extra_vars')
 		{
 			unset($GLOBALS['XE_EXTRA_VARS'][$document_srl]);
+			unset($GLOBALS['XE_EXTRA_CHK'][$document_srl]);
 			unset($GLOBALS['RX_DOCUMENT_LANG'][$document_srl]);
 		}
 	}

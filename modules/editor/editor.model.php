@@ -280,7 +280,10 @@ class EditorModel extends Editor
 			}
 			FileController::setUploadInfo($option->editor_sequence, $upload_target_srl, $option->module_srl ?? 0, $upload_config);
 
-			// Set editor mid
+			// Set editor_mid, which may be different from current_mid on the client side.
+			// While current_mid follows the URL that the user is currently viewing,
+			// editor_mid unambiguously refers to the module to which files should be uploaded.
+			// This difference may be significant when a document from one module is shown in another module.
 			if (!empty($option->module_srl))
 			{
 				$option->mid = ModuleModel::getModuleInfoByModuleSrl($option->module_srl)->mid ?? null;
@@ -776,7 +779,7 @@ class EditorModel extends Editor
 		// if not inserted converter, Get converter from skin
 		if (!$converter)
 		{
-			$converter = self::getSkinConfig($skin)->converter;
+			$converter = self::getSkinConfig($skin)->converter ?? null;
 		}
 
 		// if not inserted converter, Check
@@ -786,7 +789,7 @@ class EditorModel extends Editor
 			{
 				$converter = 'text';
 			}
-			elseif (strpos($type == 'comment' ? $config->sel_comment_editor_colorset : $config->sel_editor_colorset, 'nohtml') !== false)
+			elseif (strpos($type == 'comment' ? ($config->sel_comment_editor_colorset ?? '') : ($config->sel_editor_colorset ?? ''), 'nohtml') !== false)
 			{
 				$converter = 'text';
 			}

@@ -612,17 +612,39 @@ class DocumentController extends Document
 	 */
 	function insertDocument($obj, $manual_inserted = false, $isRestore = false, $isLatest = true)
 	{
-		if(!$manual_inserted && !checkCSRF())
+		if (!$manual_inserted && !checkCSRF())
 		{
 			return new BaseObject(-1, 'msg_security_violation');
 		}
 
-		// List variables
-		if($obj->comment_status) $obj->commentStatus = $obj->comment_status;
-		if(!$obj->commentStatus) $obj->commentStatus = 'DENY';
-		if($obj->commentStatus == 'DENY') $this->_checkCommentStatusForOldVersion($obj);
-		if($obj->allow_trackback!='Y') $obj->allow_trackback = 'N';
-		if($obj->homepage)
+		// Comment status
+		if (isset($obj->comment_status) && $obj->comment_status)
+		{
+			$obj->commentStatus = $obj->comment_status;
+		}
+		if (!isset($obj->commentStatus) || !$obj->commentStatus)
+		{
+			$obj->commentStatus = 'DENY';
+		}
+		if ($obj->commentStatus === 'DENY')
+		{
+			$this->_checkCommentStatusForOldVersion($obj);
+		}
+
+		if (!isset($obj->allow_trackback) || $obj->allow_trackback !== 'Y')
+		{
+			$obj->allow_trackback = 'N';
+		}
+		if (!isset($obj->notify_message) || $obj->notify_message !== 'Y')
+		{
+			$obj->notify_message = 'N';
+		}
+		if (!isset($obj->email_address))
+		{
+			$obj->email_address = '';
+		}
+
+		if (!empty($obj->homepage))
 		{
 			$obj->homepage = escape($obj->homepage);
 			if(!preg_match('/^[a-z]+:\/\//i',$obj->homepage))
@@ -631,20 +653,21 @@ class DocumentController extends Document
 			}
 		}
 
-		if($obj->notify_message != 'Y') $obj->notify_message = 'N';
-		if(!$obj->email_address) $obj->email_address = '';
-		if(!$isRestore) $obj->ipaddress = \RX_CLIENT_IP;
+		if (!$isRestore)
+		{
+			$obj->ipaddress = \RX_CLIENT_IP;
+		}
 		$obj->isRestore = $isRestore ? true : false;
 
 		// Sanitize variables
-		$obj->document_srl = intval($obj->document_srl);
-		$obj->category_srl = intval($obj->category_srl);
-		$obj->module_srl = intval($obj->module_srl);
+		$obj->document_srl = intval($obj->document_srl ?? 0);
+		$obj->category_srl = intval($obj->category_srl ?? 0);
+		$obj->module_srl = intval($obj->module_srl ?? 0);
 
 		// Default Status
-		if($obj->status)
+		if (isset($obj->status) && $obj->status)
 		{
-			if(!in_array($obj->status, $this->getStatusList()))
+			if (!in_array($obj->status, $this->getStatusList()))
 			{
 				$obj->status = $this->getDefaultStatus();
 			}
@@ -657,16 +680,16 @@ class DocumentController extends Document
 		// Check publish status
 		$is_publish = $obj->status !== 'TEMP';
 
-		// can modify regdate only manager
+		// Dates can only be manipulated by administrators.
 		$grant = Context::get('grant');
-		if(!$grant->manager)
+		if (!$grant->manager)
 		{
 			unset($obj->regdate);
 			unset($obj->last_update);
 			unset($obj->last_updater);
 		}
 
-		// Serialize the $extra_vars, check the extra_vars type, because duplicate serialized avoid
+		// Serialize the $extra_vars, but avoid duplicate serialization.
 		if (!isset($obj->extra_vars))
 		{
 			$obj->extra_vars = new stdClass;
@@ -749,18 +772,27 @@ class DocumentController extends Document
 		}
 
 		// Set the read counts and update order.
-		if(!$obj->readed_count) $obj->readed_count = 0;
-		if($isLatest) $obj->update_order = $obj->list_order = $obj->document_srl * -1;
-		else $obj->update_order = $obj->list_order;
+		if (!isset($obj->readed_count))
+		{
+			$obj->readed_count = 0;
+		}
+		if ($isLatest)
+		{
+			$obj->update_order = $obj->list_order = $obj->document_srl * -1;
+		}
+		else
+		{
+			$obj->update_order = $obj->list_order;
+		}
 
 		// Check the status of password hash for manually inserting. Apply hashing for otherwise.
-		if($obj->password && !$obj->password_is_hashed)
+		if(!empty($obj->password) && !$obj->password_is_hashed)
 		{
 			$obj->password = \Rhymix\Framework\Password::hashPassword($obj->password, \Rhymix\Framework\Password::getBackwardCompatibleAlgorithm());
 		}
 
 		// If the tile is empty, extract string from the contents.
-		$obj->title = escape($obj->title, false);
+		$obj->title = escape($obj->title ?? '', false);
 		if ($obj->title === '')
 		{
 			$obj->title = escape(cut_str(trim(utf8_normalize_spaces(strip_tags($obj->content))), 20, '...'), false);
@@ -1096,7 +1128,7 @@ class DocumentController extends Document
 		}
 
 		// Hash the password if it exists
-		if($obj->password)
+		if (!empty($obj->password))
 		{
 			$obj->password = \Rhymix\Framework\Password::hashPassword($obj->password, \Rhymix\Framework\Password::getBackwardCompatibleAlgorithm());
 		}
@@ -1331,7 +1363,7 @@ class DocumentController extends Document
 		if($obj->update_log_setting === 'Y')
 		{
 			$obj->extra_vars = serialize($extra_vars);
-			if($this->grant->manager)
+			if($grant->manager)
 			{
 				$obj->is_admin = 'Y';
 			}
@@ -1399,13 +1431,13 @@ class DocumentController extends Document
 		$update_args->document_srl = $obj->document_srl;
 		$update_args->update_member_srl = intval($logged_info->member_srl ?? 0);
 		$update_args->title = $obj->title;
-		$update_args->title_bold = $obj->title_bold;
-		$update_args->title_color = $obj->title_color;
+		$update_args->title_bold = $obj->title_bold ?? 'N';
+		$update_args->title_color = $obj->title_color ?? null;
 		$update_args->content = $obj->content;
 		$update_args->update_nick_name = strval($logged_info->nick_name ?? $obj->nick_name);
 		$update_args->tags = $obj->tags;
 		$update_args->extra_vars = $obj->extra_vars;
-		$update_args->reason_update = $obj->reason_update;
+		$update_args->reason_update = $obj->reason_update ?? '';
 		$update_args->is_admin = $obj->is_admin;
 		$update_output = executeQuery('document.insertDocumentUpdateLog', $update_args);
 
@@ -2740,7 +2772,7 @@ class DocumentController extends Document
 		if(!$args) $args = Context::gets('module_srl','category_srl','parent_srl','category_title','category_description','expand','is_default','group_srls','category_color','mid');
 		$args->title = trim($args->category_title);
 		$args->description = trim($args->category_description);
-		$args->color = $args->category_color;
+		$args->color = trim($args->category_color);
 		$args->expand = (isset($args->expand) && $args->expand === 'Y') ? 'Y' : 'N';
 		$args->is_default = (isset($args->is_default) && $args->is_default === 'Y') ? 'Y' : 'N';
 

@@ -853,10 +853,13 @@ class BoardView extends Board
 			return $this->dispBoardMessage($this->user->isMember() ? 'msg_not_permitted' : 'msg_not_logged');
 		}
 
+		// Fix any missing module configurations
+		BoardModel::fixModuleConfig($this->module_info);
+
 		/**
 		 * check if the category option is enabled not not
 		 */
-		if($this->module_info->use_category=='Y')
+		if ($this->module_info->use_category === 'Y')
 		{
 			// get the user group information
 			if(Context::get('is_logged'))
@@ -867,7 +870,6 @@ class BoardView extends Board
 			{
 				$group_srls = array();
 			}
-			$group_srls_count = count($group_srls);
 
 			// check the grant after obtained the category list
 			$category_list = array();
@@ -917,9 +919,9 @@ class BoardView extends Board
 		$oDocument->add('origin_module_srl', $oDocument->get('module_srl'));
 		$oDocument->add('module_srl', $this->module_srl);
 
-		if($oDocument->isExists())
+		if ($oDocument->isExists())
 		{
-			if(($this->module_info->protect_document_regdate ?? 0) > 0 && $this->grant->manager == false)
+			if ($this->module_info->protect_document_regdate > 0 && $this->grant->manager == false)
 			{
 				if($oDocument->get('regdate') < date('YmdHis', strtotime('-'.$this->module_info->protect_document_regdate.' day')))
 				{
@@ -928,7 +930,7 @@ class BoardView extends Board
 					throw new Rhymix\Framework\Exception($massage);
 				}
 			}
-			if(($this->module_info->protect_content ?? 'N') === 'Y' || ($this->module_info->protect_update_content ?? 'N') == 'Y')
+			if ($this->module_info->protect_content === 'Y' || $this->module_info->protect_update_content === 'Y')
 			{
 				if($oDocument->get('comment_count') > 0 && $this->grant->manager == false)
 				{
@@ -936,7 +938,7 @@ class BoardView extends Board
 				}
 			}
 
-			if (($this->module_info->protect_admin_content_update ?? 'N') !== 'N')
+			if ($this->module_info->protect_admin_content_update === 'Y')
 			{
 				$member_info = MemberModel::getMemberInfo($oDocument->get('member_srl'));
 				if(isset($member_info->is_admin) && $member_info->is_admin == 'Y' && $this->user->is_admin != 'Y')
@@ -1081,6 +1083,9 @@ class BoardView extends Board
 				return $this->setTemplateFile('input_password_form');
 			}
 		}
+
+		// Fix any missing module configurations
+		BoardModel::fixModuleConfig($this->module_info);
 
 		if($this->module_info->protect_document_regdate > 0 && $this->grant->manager == false)
 		{
@@ -1276,6 +1281,9 @@ class BoardView extends Board
 			}
 		}
 
+		// Fix any missing module configurations
+		BoardModel::fixModuleConfig($this->module_info);
+
 		if($this->module_info->protect_comment_regdate > 0 && $this->grant->manager == false)
 		{
 			if($oComment->get('regdate') < date('YmdHis', strtotime('-'.$this->module_info->protect_document_regdate.' day')))
@@ -1359,6 +1367,9 @@ class BoardView extends Board
 				return $this->setTemplateFile('input_password_form');
 			}
 		}
+
+		// Fix any missing module configurations
+		BoardModel::fixModuleConfig($this->module_info);
 
 		if($this->module_info->protect_comment_regdate > 0 && $this->grant->manager == false)
 		{

@@ -719,9 +719,10 @@ class Context
 	 * Append string to browser title
 	 *
 	 * @param string $title Browser title to be appended
+	 * @param string $delimiter
 	 * @return void
 	 */
-	public static function addBrowserTitle($title)
+	public static function addBrowserTitle($title, $delimiter = ' - ')
 	{
 		if(!$title)
 		{
@@ -729,7 +730,7 @@ class Context
 		}
 		if(self::$_instance->browser_title)
 		{
-			self::$_instance->browser_title .= ' - ' . $title;
+			self::$_instance->browser_title .= $delimiter . $title;
 		}
 		else
 		{
@@ -741,9 +742,10 @@ class Context
 	 * Prepend string to browser title
 	 *
 	 * @param string $title Browser title to be prepended
+	 * @param string $delimiter
 	 * @return void
 	 */
-	public static function prependBrowserTitle($title)
+	public static function prependBrowserTitle($title, $delimiter = ' - ')
 	{
 		if(!$title)
 		{
@@ -751,7 +753,7 @@ class Context
 		}
 		if(self::$_instance->browser_title)
 		{
-			self::$_instance->browser_title = $title . ' - ' . self::$_instance->browser_title;
+			self::$_instance->browser_title = $title . $delimiter . self::$_instance->browser_title;
 		}
 		else
 		{
@@ -903,7 +905,7 @@ class Context
 	 * Return string accoring to the inputed code
 	 *
 	 * @param string $code Language variable name
-	 * @return string If string for the code exists returns it, otherwise returns original code
+	 * @return mixed
 	 */
 	public static function getLang($code)
 	{
@@ -1020,7 +1022,7 @@ class Context
 	 * @param string $key
 	 * @param mixed $charset charset
 	 * @see arrayConvWalkCallback will replaced array_walk_recursive in >=PHP5
-	 * @return void
+	 * @return ?bool
 	 */
 	public static function checkConvertFlag(&$val, $key = null, $charset = null)
 	{
@@ -1049,7 +1051,7 @@ class Context
 	 * @param string $key
 	 * @param string $charset character set
 	 * @see arrayConvWalkCallback will replaced array_walk_recursive in >=PHP5
-	 * @return object converted object
+	 * @return void
 	 */
 	public static function doConvertEncoding(&$val, $key = null, $charset = 'CP949')
 	{
@@ -1315,7 +1317,7 @@ class Context
 	 *
 	 * @return void
 	 */
-	private static function setUploadInfo()
+	public static function setUploadInfo()
 	{
 		if (!isset($_SERVER['REQUEST_METHOD']) || $_SERVER['REQUEST_METHOD'] !== 'POST' || !$_FILES)
 		{
@@ -1617,10 +1619,12 @@ class Context
 	}
 
 	/**
-	 * Display a generic error page and exit.
+	 * Display a generic error page.
 	 *
 	 * @param string $title
 	 * @param string $message
+	 * @param int $status
+	 * @param string $location
 	 * @return void
 	 */
 	public static function displayErrorPage($title = 'Error', $message = '', $status = 500, $location = '')
@@ -1963,7 +1967,7 @@ class Context
 	 *
 	 * @param string $key Key
 	 * @param mixed $val Value
-	 * @param mixed $replace_request_arg
+	 * @param bool $replace_request_arg
 	 * @return void
 	 */
 	public static function set($key, $val, $replace_request_arg = false)
@@ -2020,17 +2024,20 @@ class Context
 	/**
 	 * Get one more vars in object vars with given arguments(key1, key2, key3,...)
 	 *
-	 * @return object
+	 * @return ?object
 	 */
 	public static function gets()
 	{
-		$num_args = func_num_args();
-		if($num_args < 1)
+		$args_list = func_get_args();
+		if (count($args_list) < 1)
 		{
 			return;
 		}
+		if (count($args_list) === 1 && is_array($args_list[0]))
+		{
+			$args_list = $args_list[0];
+		}
 
-		$args_list = func_get_args();
 		$output = new stdClass;
 		self::$_user_vars = self::$_user_vars !== null ? self::$_user_vars : new stdClass;
 		foreach($args_list as $key)
@@ -3003,7 +3010,7 @@ class Context
 	 * Add OpenGraph metadata
 	 *
 	 * @param string $name
-	 * @param mixed $content
+	 * @param array $content
 	 * @return void
 	 */
 	public static function addOpenGraphData($name, $content)
@@ -3040,6 +3047,6 @@ class Context
 	 */
 	public static function getCanonicalURL()
 	{
-		return self::$_instance->canonical_url;
+		return self::$_instance->canonical_url ?? '';
 	}
 }

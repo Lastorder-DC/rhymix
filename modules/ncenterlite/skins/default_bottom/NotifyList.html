@@ -7,6 +7,12 @@
 		<a href="{getUrl('readed', 'All')}">전체 알림</a>
 	</li>
 </ul>
+<div cond="!$readed || $readed == 'N'">
+	<div class="btnArea" style="clear:none;float:right">
+		<button class="btn" onclick="exec_xml('ncenterlite', 'procNcenterliteNotifyReadAll'); location.reload()">모두 읽음 처리</button>
+	</div>
+	<div class="clear:both"></div>
+</div>
 <table class="table table-striped table-hover" style="margin-top:20px;">
 	<thead class="bg_f_f9">
 		<tr>

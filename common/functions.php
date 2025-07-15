@@ -56,9 +56,12 @@ function lang(?string $code, $value = null)
  * @param array $array The input array
  * @return mixed
  */
-function array_first(array $array)
+if (!function_exists('array_first'))
 {
-	return reset($array);
+	function array_first(array $array)
+	{
+		return reset($array);
+	}
 }
 
 /**
@@ -69,8 +72,7 @@ function array_first(array $array)
  */
 function array_first_key(array $array)
 {
-	reset($array);
-	return key($array);
+	return array_key_first($array);
 }
 
 /**
@@ -79,9 +81,12 @@ function array_first_key(array $array)
  * @param array $array The input array
  * @return mixed
  */
-function array_last(array $array)
+if (!function_exists('array_last'))
 {
-	return end($array);
+	function array_last(array $array)
+	{
+		return end($array);
+	}
 }
 
 /**
@@ -92,8 +97,7 @@ function array_last(array $array)
  */
 function array_last_key(array $array)
 {
-	end($array);
-	return key($array);
+	return array_key_last($array);
 }
 
 /**

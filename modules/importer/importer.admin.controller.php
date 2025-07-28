@@ -1018,7 +1018,7 @@ class importerAdminController extends importer
 				}
 				else
 				{
-					// Get parent comment infomation
+					// Get parent comment information
 					$parent_args = new stdClass();
 					$parent_args->comment_srl = $obj->parent_srl;
 					$parent_output = executeQuery('comment.getCommentListItem', $parent_args);
@@ -1090,10 +1090,11 @@ class importerAdminController extends importer
 			}
 
 			if($started) $buff .= $str;
+
 			// If it ends with </attach>, handle attachements
 			if(trim($str) == '</attach>')
 			{
-				$xmlDoc = Rhymix\Framework\Parsers\XEXMLParser::loadXMLString($buff.$str);
+				$xmlDoc = Rhymix\Framework\Parsers\XEXMLParser::loadXMLString($buff);
 
 				$file_obj->source_filename = base64_decode($xmlDoc->attach->filename->body);
 				$file_obj->download_count = base64_decode($xmlDoc->attach->download_count->body);

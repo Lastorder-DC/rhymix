@@ -138,9 +138,9 @@ class TemplateParser_v2
 		// Apply conversions.
 		$content = $this->_addContextSwitches($content);
 		$content = $this->_removeComments($content);
+		$content = $this->_convertVerbatimSections($content);
 		$content = $this->_convertRelativePaths($content);
 		$content = $this->_convertPHPSections($content);
-		$content = $this->_convertVerbatimSections($content);
 		$content = $this->_convertFragments($content);
 		$content = $this->_convertClassAliases($content);
 		$content = $this->_convertIncludes($content);
@@ -872,7 +872,16 @@ class TemplateParser_v2
 		$str = $this->_escapeCurly($str);
 		$str = $this->_convertVariableScope($str);
 
-		// Apply filters.
+		// Process the escape option first.
+		foreach ($filters as $filter)
+		{
+			if (in_array($filter, ['autoescape', 'autolang', 'escape', 'noescape']))
+			{
+				$escape_option = $filter;
+			}
+		}
+
+		// Apply other filters.
 		foreach ($filters as $filter)
 		{
 			// Separate the filter option from the filter name.
@@ -891,14 +900,13 @@ class TemplateParser_v2
 				}
 			}
 
-			// Apply each filter.
+			// Apply filters.
 			switch ($filter)
 			{
 				case 'autoescape':
 				case 'autolang':
 				case 'escape':
 				case 'noescape':
-					$escape_option = $filter;
 					break;
 				case 'escapejs':
 				case 'js':

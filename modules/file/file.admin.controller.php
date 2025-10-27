@@ -92,6 +92,7 @@ class FileAdminController extends File
 		$config->image_quality_adjustment = max(50, min(100, intval(Context::get('image_quality_adjustment'))));
 		$config->image_autorotate = Context::get('image_autorotate') === 'Y' ? true : false;
 		$config->image_remove_exif_data = Context::get('image_remove_exif_data') === 'Y' ? true : false;
+		$config->image_always_reencode = Context::get('image_always_reencode') === 'Y' ? true : false;
 
 		// Video settings
 		$config->max_video_width = intval(Context::get('max_video_width')) ?: '';
@@ -389,6 +390,11 @@ class FileAdminController extends File
 		$result = FileHandler::createImageFile(FileHandler::getRealPath($file->uploaded_filename), $temp_filename, $width, $height, $format, 'fill', $quality);
 		if (!$result && !empty($config->magick_command))
 		{
+			$temp_dir = dirname($temp_filename);
+			if (!Rhymix\Framework\Storage::isDirectory($temp_dir))
+			{
+				Rhymix\Framework\Storage::createDirectory($temp_dir);
+			}
 			$command = vsprintf('%s %s -resize %dx%d -quality %d %s %s %s', [
 				\RX_WINDOWS ? escapeshellarg($config->magick_command) : $config->magick_command,
 				escapeshellarg(FileHandler::getRealPath($file->uploaded_filename)),

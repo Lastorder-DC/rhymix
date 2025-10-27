@@ -761,13 +761,17 @@ class DocumentController extends Document
 				{
 					if (!$category_list[$obj->category_srl]->grant)
 					{
-						return new BaseObject(-1, 'msg_not_permitted');
+						return new BaseObject(-1, 'document.msg_category_not_permitted');
 					}
 				}
 				else
 				{
 					$obj->category_srl = 0;
 				}
+			}
+			else
+			{
+				$obj->category_srl = 0;
 			}
 		}
 
@@ -851,7 +855,7 @@ class DocumentController extends Document
 		{
 			foreach($extra_keys as $idx => $extra_item)
 			{
-				$value = NULL;
+				$value = $sort_value = null;
 				if(isset($obj->{'extra_vars'.$idx}))
 				{
 					$tmp = $obj->{'extra_vars'.$idx};
@@ -904,7 +908,11 @@ class DocumentController extends Document
 				}
 
 				$extra_vars[$extra_item->name] = $value;
-				$this->insertDocumentExtraVar($obj->module_srl, $obj->document_srl, $idx, $value, $extra_item->eid);
+				if ($extra_item->type === 'number')
+				{
+					$sort_value = (int)$value;
+				}
+				$this->insertDocumentExtraVar($obj->module_srl, $obj->document_srl, $idx, $value, $extra_item->eid, null, $sort_value);
 			}
 		}
 
@@ -1117,13 +1125,17 @@ class DocumentController extends Document
 				{
 					if (!$category_list[$obj->category_srl]->grant)
 					{
-						return new BaseObject(-1, 'msg_not_permitted');
+						return new BaseObject(-1, 'document.msg_category_not_permitted');
 					}
 				}
 				else
 				{
 					$obj->category_srl = 0;
 				}
+			}
+			else
+			{
+				$obj->category_srl = 0;
 			}
 		}
 
@@ -1234,7 +1246,7 @@ class DocumentController extends Document
 			{
 				foreach($extra_keys as $idx => $extra_item)
 				{
-					$value = NULL;
+					$value = $sort_value = null;
 					if(isset($obj->{'extra_vars'.$idx}))
 					{
 						$tmp = $obj->{'extra_vars'.$idx};
@@ -1331,7 +1343,11 @@ class DocumentController extends Document
 						}
 					}
 					$extra_vars[$extra_item->name] = $value;
-					$this->insertDocumentExtraVar($obj->module_srl, $obj->document_srl, $idx, $value, $extra_item->eid);
+					if ($extra_item->type === 'number')
+					{
+						$sort_value = (int)$value;
+					}
+					$this->insertDocumentExtraVar($obj->module_srl, $obj->document_srl, $idx, $value, $extra_item->eid, null, $sort_value);
 				}
 			}
 
@@ -1779,9 +1795,10 @@ class DocumentController extends Document
 	 * @param int $eid
 	 * @param string $var_is_strict
 	 * @param array $var_options
+	 * @param string $var_sort
 	 * @return object
 	 */
-	function insertDocumentExtraKey($module_srl, $var_idx, $var_name, $var_type, $var_is_required = 'N', $var_search = 'N', $var_default = '', $var_desc = '', $eid = 0, $var_is_strict = 'N', $var_options = null)
+	function insertDocumentExtraKey($module_srl, $var_idx, $var_name, $var_type, $var_is_required = 'N', $var_search = 'N', $var_default = '', $var_desc = '', $eid = 0, $var_is_strict = 'N', $var_options = null, $var_sort = 'N')
 	{
 		if (!$module_srl || !$var_idx || !$var_name || !$var_type || !$eid)
 		{
@@ -1796,6 +1813,7 @@ class DocumentController extends Document
 		$obj->var_is_required = $var_is_required=='Y'?'Y':'N';
 		$obj->var_is_strict = $var_is_strict=='Y'?'Y':'N';
 		$obj->var_search = $var_search=='Y'?'Y':'N';
+		$obj->var_sort = $var_sort=='Y'?'Y':'N';
 		$obj->var_default = $var_default;
 		$obj->var_options = $var_options ? json_encode($var_options, \JSON_UNESCAPED_UNICODE | \JSON_UNESCAPED_SLASHES) : null;
 		$obj->var_desc = $var_desc;
@@ -1883,9 +1901,10 @@ class DocumentController extends Document
 	 * @param mixed $value
 	 * @param int $eid
 	 * @param string $lang_code
-	 * @return Object|void
+	 * @param ?int $sort_value
+	 * @return BaseObject
 	 */
-	public static function insertDocumentExtraVar($module_srl, $document_srl, $idx_or_eid, $value, $eid = null, $lang_code = null)
+	public static function insertDocumentExtraVar($module_srl, $document_srl, $idx_or_eid, $value, $eid = null, $lang_code = null, $sort_value = null)
 	{
 		if(!$module_srl || !$document_srl || !$idx_or_eid || !isset($value))
 		{
@@ -1918,6 +1937,7 @@ class DocumentController extends Document
 		$obj->document_srl = $document_srl;
 		$obj->var_idx = $idx_or_eid;
 		$obj->value = $value;
+		$obj->sort_value = $sort_value;
 		$obj->lang_code = $lang_code ?: Context::getLangType();
 		$obj->eid = $eid;
 
@@ -1932,9 +1952,10 @@ class DocumentController extends Document
 	 * @param mixed $value
 	 * @param int $eid
 	 * @param string $lang_code
-	 * @return Object|void
+	 * @param ?int $sort_value
+	 * @return BaseObject
 	 */
-	public static function updateDocumentExtraVar($module_srl, $document_srl, $idx_or_eid, $value, $eid = null, $lang_code = null)
+	public static function updateDocumentExtraVar($module_srl, $document_srl, $idx_or_eid, $value, $eid = null, $lang_code = null, $sort_value = null)
 	{
 		if(!$module_srl || !$document_srl || !$idx_or_eid || !isset($value))
 		{
@@ -1962,13 +1983,10 @@ class DocumentController extends Document
 			}
 		}
 
-		$obj = new stdClass;
-		$obj->module_srl = $module_srl;
-		$obj->document_srl = $document_srl;
-		$obj->var_idx = $idx_or_eid;
-		$obj->value = $value;
-		$obj->lang_code = $lang_code ?: Context::getLangType();
-		$obj->eid = $eid;
+		if (!$lang_code)
+		{
+			$lang_code = Context::getLangType();
+		}
 
 		$oDB = DB::getInstance();
 		$oDB->begin();
@@ -1980,7 +1998,7 @@ class DocumentController extends Document
 			return $output;
 		}
 
-		$output = self::insertDocumentExtraVar($module_srl, $document_srl, $idx_or_eid, $value, $eid, $lang_code);
+		$output = self::insertDocumentExtraVar($module_srl, $document_srl, $idx_or_eid, $value, $eid, $lang_code, $sort_value);
 		if (!$output->toBool())
 		{
 			$oDB->rollback();
@@ -1998,7 +2016,7 @@ class DocumentController extends Document
 	 * @param int $var_idx
 	 * @param string $lang_code
 	 * @param int $eid
-	 * @return $output
+	 * @return BaseObject
 	 */
 	public static function deleteDocumentExtraVars($module_srl, $document_srl = null, $var_idx = null, $lang_code = null, $eid = null)
 	{
@@ -2008,8 +2026,7 @@ class DocumentController extends Document
 		if(!is_null($var_idx)) $obj->var_idx = $var_idx;
 		if(!is_null($lang_code)) $obj->lang_code = $lang_code;
 		if(!is_null($eid)) $obj->eid = $eid;
-		$output = executeQuery('document.deleteDocumentExtraVars', $obj);
-		return $output;
+		return executeQuery('document.deleteDocumentExtraVars', $obj);
 	}
 
 

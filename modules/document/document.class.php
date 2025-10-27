@@ -87,9 +87,6 @@ class Document extends ModuleObject
 		if(!$oDB->isIndexExists("document_extra_vars", "unique_extra_vars")) return true;
 		if($oDB->isIndexExists("document_extra_vars", "unique_module_vars")) return true;
 
-		// 2011. 03. 30 Cubrid index Check the index in the document_extra_vars table
-		if(!$oDB->isIndexExists("document_extra_vars", "idx_document_list_order")) return true;
-
 		// 2011. 10. 25 status index check
 		if(!$oDB->isIndexExists("documents", "idx_module_status")) return true;
 
@@ -112,6 +109,14 @@ class Document extends ModuleObject
 		// 2024.10.08 Add columns to document_extra_keys table
 		if(!$oDB->isColumnExists('document_extra_keys', 'var_is_strict')) return true;
 		if(!$oDB->isColumnExists('document_extra_keys', 'var_options')) return true;
+
+		// 2025.10.23 Add sort to document_extra_keys table, and sort_value to document_extra_vars table
+		if(!$oDB->isColumnExists('document_extra_keys', 'var_sort')) return true;
+		if(!$oDB->isColumnExists('document_extra_vars', 'sort_value') || !$oDB->isIndexExists('document_extra_vars', 'idx_sort_value')) return true;
+		if(!$oDB->isIndexExists('document_extra_vars', 'idx_prefix_value')) return true;
+
+		// Delete unnecessary index
+		if($oDB->isIndexExists('document_extra_vars', 'idx_document_list_order')) return true;
 
 		return false;
 	}
@@ -178,12 +183,7 @@ class Document extends ModuleObject
 			$oDB->dropIndex("document_extra_vars", "unique_module_vars", true);
 		}
 
-		// 2011. 03. 30 Cubrid index Check the index in the document_extra_vars table
-		if(!$oDB->isIndexExists("document_extra_vars", "idx_document_list_order"))
-		{
-			$oDB->addIndex("document_extra_vars", "idx_document_list_order", array("document_srl","module_srl","var_idx"), false);
-		}
-
+		// 2011. 10. 25 status index check
 		if(!$oDB->isIndexExists("documents", "idx_module_status"))
 		{
 			$oDB->addIndex("documents", "idx_module_status", array("module_srl","status"));
@@ -232,6 +232,47 @@ class Document extends ModuleObject
 		if(!$oDB->isColumnExists('document_extra_keys', 'var_options'))
 		{
 			$oDB->addColumn('document_extra_keys', 'var_options', 'text', null, null, false, 'var_default');
+		}
+
+		// 2025.10.23 Add sort to document_extra_keys table, and sort_value to document_extra_vars table
+		if(!$oDB->isColumnExists('document_extra_keys', 'var_sort'))
+		{
+			$oDB->addColumn('document_extra_keys', 'var_sort', 'char', '1', 'N', true, 'var_search');
+		}
+		if(!$oDB->isColumnExists('document_extra_vars', 'sort_value') || !$oDB->isIndexExists('document_extra_vars', 'idx_sort_value'))
+		{
+			$oDB->addColumn('document_extra_vars', 'sort_value', 'bigint', null, null, false, 'value');
+			$oDB->begin();
+			$output = executeQueryArray('document.getDocumentNumericExtraKeys', ['var_type' => 'number']);
+			if (!$output->toBool())
+			{
+				$oDB->rollback();
+				return $output;
+			}
+			foreach ($output->data ?? [] as $item)
+			{
+				$output = executeQuery('document.updateDocumentExtraVarSortValue', [
+					'module_srl' => $item->module_srl,
+					'var_idx' => $item->var_idx,
+				]);
+				if (!$output->toBool())
+				{
+					$oDB->rollback();
+					return $output;
+				}
+			}
+			$oDB->commit();
+			$oDB->addIndex('document_extra_vars', 'idx_sort_value', array('module_srl', 'sort_value'));
+		}
+		if(!$oDB->isIndexExists('document_extra_vars', 'idx_prefix_value'))
+		{
+			$oDB->addIndex('document_extra_vars', 'idx_prefix_value', array('module_srl', 'value(10)'));
+		}
+
+		// Delete unnecessary index
+		if($oDB->isIndexExists('document_extra_vars', 'idx_document_list_order'))
+		{
+			$oDB->dropIndex('document_extra_vars', 'idx_document_list_order');
 		}
 	}
 

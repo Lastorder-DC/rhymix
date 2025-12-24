@@ -50,16 +50,15 @@ class DocumentView extends Document
 	 */
 	function dispDocumentPreview()
 	{
-		if(!checkCSRF())
+		if(!Rhymix\Framework\Security::checkCSRF())
 		{
 			throw new Rhymix\Framework\Exceptions\SecurityViolation;
 		}
 
-		$content = Context::get('content');
-
-		if(Context::get('logged_info')->is_admin != 'Y')
+		$content = (string)Context::get('content');
+		if (Context::get('logged_info')->is_admin !== 'Y')
 		{
-			$content = removeHackTag($content);
+			$content = Rhymix\Framework\Filters\HTMLFilter::clean($content);
 		}
 
 		// Editor converter

@@ -612,7 +612,7 @@ class DocumentController extends Document
 	 */
 	function insertDocument($obj, $manual_inserted = false, $isRestore = false, $isLatest = true)
 	{
-		if (!$manual_inserted && !checkCSRF())
+		if (!$manual_inserted && !Rhymix\Framework\Security::checkCSRF())
 		{
 			return new BaseObject(-1, 'msg_security_violation');
 		}
@@ -713,7 +713,7 @@ class DocumentController extends Document
 			$obj->user_id = htmlspecialchars_decode($logged_info->user_id);
 			$obj->user_name = htmlspecialchars_decode($logged_info->user_name);
 			$obj->nick_name = htmlspecialchars_decode($logged_info->nick_name);
-			$obj->email_address = $logged_info->email_address;
+			$obj->email_address = $logged_info->email_address ?? '';
 			$obj->homepage = $logged_info->homepage;
 		}
 		if(!$logged_info->member_srl && !$manual_inserted && !$isRestore)
@@ -816,24 +816,31 @@ class DocumentController extends Document
 		}
 
 		// if use editor of nohtml, Remove HTML tags from the contents.
-		if(!$manual_inserted || isset($obj->allow_html) || isset($obj->use_html))
+		if (!$manual_inserted || isset($obj->allow_html) || isset($obj->use_html))
 		{
 			$obj->content = EditorModel::converter($obj, 'document');
 		}
 
 		// Remove iframe and script if not a top adminisrator in the session.
-		if($logged_info->is_admin != 'Y')
+		if ($logged_info->is_admin !== 'Y')
 		{
-			$obj->content = removeHackTag($obj->content);
+			$obj->content = Rhymix\Framework\Filters\HTMLFilter::clean((string)$obj->content);
+		}
+
+		// Fix encoding of non-BMP UTF-8 characters.
+		if (config('db.master.charset') !== 'utf8mb4')
+		{
+			$obj->title = utf8_mbencode($obj->title);
+			$obj->content = utf8_mbencode($obj->content);
 		}
 
 		// An error appears if both log-in info and user name don't exist.
-		if(!$logged_info->member_srl && !$obj->nick_name) return new BaseObject(-1, 'msg_invalid_request');
+		if (!$logged_info->member_srl && !$obj->nick_name)
+		{
+			return new BaseObject(-1, 'msg_invalid_request');
+		}
 
-		// Fix encoding of non-BMP UTF-8 characters.
-		$obj->title = utf8_mbencode($obj->title);
-		$obj->content = utf8_mbencode($obj->content);
-
+		// Set lang_code to the current user's language
 		$obj->lang_code = Context::getLangType();
 
 		// begin transaction
@@ -923,7 +930,7 @@ class DocumentController extends Document
 		}
 
 		// Call a trigger (after)
-		if($obj->update_log_setting === 'Y')
+		if (isset($obj->update_log_setting) && $obj->update_log_setting === 'Y')
 		{
 			$obj->extra_vars = serialize($extra_vars);
 			$update_output = $this->insertDocumentUpdateLog($obj);
@@ -972,7 +979,7 @@ class DocumentController extends Document
 	 */
 	function updateDocument($source_obj, $obj, $manual_updated = FALSE)
 	{
-		if(!$manual_updated && !checkCSRF())
+		if(!$manual_updated && !Rhymix\Framework\Security::checkCSRF())
 		{
 			return new BaseObject(-1, 'msg_security_violation');
 		}
@@ -1172,14 +1179,17 @@ class DocumentController extends Document
 		}
 
 		// Remove iframe and script if not a top adminisrator in the session.
-		if($logged_info->is_admin != 'Y')
+		if ($logged_info->is_admin !== 'Y')
 		{
-			$obj->content = removeHackTag($obj->content);
+			$obj->content = Rhymix\Framework\Filters\HTMLFilter::clean((string)$obj->content);
 		}
 
 		// Fix encoding of non-BMP UTF-8 characters.
-		$obj->title = utf8_mbencode($obj->title);
-		$obj->content = utf8_mbencode($obj->content);
+		if (config('db.master.charset') !== 'utf8mb4')
+		{
+			$obj->title = utf8_mbencode($obj->title);
+			$obj->content = utf8_mbencode($obj->content);
+		}
 
 		// Begin transaction
 		$oDB = DB::getInstance();
@@ -1376,7 +1386,7 @@ class DocumentController extends Document
 		}
 
 		// Update log
-		if($obj->update_log_setting === 'Y')
+		if (isset($obj->update_log_setting) && $obj->update_log_setting === 'Y')
 		{
 			$obj->extra_vars = serialize($extra_vars);
 			if($grant->manager)

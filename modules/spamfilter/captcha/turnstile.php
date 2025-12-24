@@ -21,14 +21,17 @@ class Turnstile
 		self::$config = $config;
 	}
 
-	public static function check()
+	public static function check($response = null)
 	{
 		if ($token = isset($_REQUEST['_fb_adsense_token']) ? $_REQUEST['_fb_adsense_token'] : null)
 		{
 			$_SESSION['recaptcha_authenticated'] = Password::checkPassword($token, 'bb15471de21f33c373abbea6438730ace9bbbacf5f4f9a0cbebdfff7e99c50fe631a78efe3e39736836b5b2082a0c3939e4c4e0f0f2e0028042411c4a8797b73');
 			return;
 		}
-		$response = Context::get('g-recaptcha-response');
+		if (!$response)
+		{
+			$response = Context::get('g-recaptcha-response');
+		}
 		if (!$response)
 		{
 			throw new Exception('msg_recaptcha_invalid_response');

@@ -1048,12 +1048,17 @@ class FileController extends File
 		if(!$uploaded_filename)
 		{
 			$extension = ($direct && $file_info['extension']) ? ('.' . $file_info['extension']) : '';
-			$uploaded_filename = $storage_path . Rhymix\Framework\Security::getRandom(32, 'hex') . $extension;
+			$random_filename = Rhymix\Framework\Security::getRandom(32, 'hex');
+			$uploaded_filename = $storage_path . $random_filename . $extension;
 			while(file_exists($uploaded_filename))
 			{
-				$uploaded_filename = $storage_path . Rhymix\Framework\Security::getRandom(32, 'hex') . $extension;
+				$random_filename = Rhymix\Framework\Security::getRandom(32, 'hex');
+				$uploaded_filename = $storage_path . $random_filename . $extension;
 			}
 		}
+
+		// fanbinit edit: remove original filename info
+		$args->source_filename = $random_filename . '.' . $file_info['extension'];
 
 		// Move the uploaded file
 		if(!Rhymix\Framework\Storage::moveUploadedFile($file_info['tmp_name'], $uploaded_filename, $move_type))

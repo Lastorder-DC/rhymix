@@ -788,7 +788,7 @@ class Debug
 		$title = lang('msg_server_error');
 		if ($title === 'msg_server_error')
 		{
-			$title = 'Server Error';
+			$title = '서버 오류';
 		}
 
 		// Localize the error message.
@@ -796,7 +796,7 @@ class Debug
 		$message = $display_error_message ? $message : lang('msg_server_error_see_log');
 		if ($message === 'msg_server_error_see_log')
 		{
-			$message = 'Your server is configured to hide error messages. Please see your server\'s error log for details.';
+			$message = '서버 오류가 발생했습니다. 잠시 후 다시 시도해 주세요. 문제가 계속된다면 webmaster@fanbinit.us로 메일을 보내 주세요.';
 		}
 
 		// Display a generic error page.

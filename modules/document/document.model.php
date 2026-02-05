@@ -261,7 +261,6 @@ class DocumentModel extends Document
 		else
 		{
 			self::_setSearchOption($obj, $args, $query_id, $use_division);
-			debugPrint($args);
 			$output = executeQueryArray($query_id, $args, $args->columnList);
 		}
 

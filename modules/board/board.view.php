@@ -547,7 +547,13 @@ class BoardView extends Board
 		$args->page = intval(Context::get('page')) ?: null;
 		$args->list_count = $this->list_count;
 		$args->page_count = $this->page_count;
-		if(Context::get('v_mode') == 'recommended') $args->s_voted_count = Rhymix\Modules\Yeokbox\Models\Config::getVoteCount();
+		if(Context::get('v_mode') == 'recommended') {
+			$args->s_voted_count = Rhymix\Modules\Yeokbox\Models\Config::getVoteCount();
+		}
+		if(Context::get('v_mode') == 'super_recommended') {
+			$args->s_voted_count = Rhymix\Modules\Yeokbox\Models\Config::getSuperVoteCount();
+			$args->s_readed_count = Rhymix\Modules\Yeokbox\Models\Config::getReadCount();
+		}
 		if (isset($this->module_info->include_days) && $this->module_info->include_days > 0)
 		{
 			$args->start_regdate = date('YmdHis', time() - ($this->module_info->include_days * 86400));

@@ -261,6 +261,7 @@ class DocumentModel extends Document
 		else
 		{
 			self::_setSearchOption($obj, $args, $query_id, $use_division);
+			debugPrint($args);
 			$output = executeQueryArray($query_id, $args, $args->columnList);
 		}
 
@@ -1429,6 +1430,10 @@ class DocumentModel extends Document
 		if (isset($searchOpt->s_voted_count) && $searchOpt->s_voted_count > 0)
 		{
 			$args->s_voted_count = intval($searchOpt->s_voted_count);
+		}
+		if (isset($searchOpt->s_readed_count) && $searchOpt->s_readed_count > 0)
+		{
+			$args->s_readed_count = intval($searchOpt->s_readed_count);
 		}
 
 		// get directly module_srl by mid

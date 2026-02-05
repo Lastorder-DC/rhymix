@@ -31,8 +31,8 @@
             <condition operation="like" column="documents.tags" var="s_tags" pipe="or" />
             <condition operation="equal" column="documents.is_secret" var="s_is_secret" pipe="or" />
             <condition operation="equal" column="documents.member_srl" var="s_member_srl" pipe="or" />
-            <condition operation="more" column="documents.readed_count" var="s_readed_count" pipe="or" />
-            <condition operation="more" column="documents.voted_count" var="s_voted_count" pipe="or" />
+            <condition operation="more" column="documents.readed_count" var="s_readed_count" pipe="and" />
+            <condition operation="more" column="documents.voted_count" var="s_voted_count" pipe="and" />
             <condition operation="less" column="documents.blamed_count" var="s_blamed_count" pipe="or" />
             <condition operation="more" column="documents.comment_count" var="s_comment_count" pipe="or" />
             <condition operation="more" column="documents.trackback_count" var="s_trackback_count" pipe="or" />

@@ -70,6 +70,11 @@ class DocumentController extends Document
 				}
 			}
 		}
+		$yeokka_member_srl = Rhymix\Modules\Yeokbox\Models\Config::getConfig()->yeokka_member_srl;
+		if($logged_info->member_srl != $yeokka_member_srl && $oDocument->getRegdateTime() < (time() - (86400 * 7)))
+		{
+			throw new Rhymix\Framework\Exception('작성 이후 7일 이상이 경과한 글은 추천할 수 없습니다.');
+		}
 
 		$point = 1;
 		$allow_same_ip = ($document_config->allow_vote_from_same_ip ?? 'N') === 'Y';

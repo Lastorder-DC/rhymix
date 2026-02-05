@@ -12,8 +12,9 @@
 			<thead>
 				<tr>
 					<th scope="col">{$lang->word}</th>
+					<th scope="col">오류코드</th>
 					<th scope="col">{$lang->description}</th>
-					<th scope="col">{$lang->cmd_spamfilter_except_member}</th>
+					<!-- th scope="col">{$lang->cmd_spamfilter_except_member}</th -->
 					<th scope="col">{$lang->cmd_spamfilter_filter_html}</th>
 					<th scope="col"><a href="{getUrl('sort_index', 'latest_hit')}">{$lang->latest_hit} <!--@if($sort_index === 'latest_hit')-->▼<!--@endif--></a></th>
 					<th scope="col"><a href="{getUrl('sort_index', 'hit')}">{$lang->hit} <!--@if($sort_index === 'hit' || !$sort_index)-->▼<!--@endif--></a></th>
@@ -24,8 +25,9 @@
 			<tbody>
 				<tr loop="$word_list => $word_info">
 					<td>{$word_info->word} <!--@if(preg_match('#^/.+/$#', $word_info->word))--><span class="is_regexp">{$lang->cmd_spamfilter_is_regexp}</span><!--@end--></td>
+					<td>{substr(sha1($word_info->word), 0, 7)}</td>
 					<td>{$word_info->description}</td>
-					<td><a class="denied_word_toggle_except_member" href="#" data-word="{$word_info->word}">{$word_info->except_member}</a></td>
+					<!-- td><a class="denied_word_toggle_except_member" href="#" data-word="{$word_info->word}">{$word_info->except_member}</a></td -->
 					<td><a class="denied_word_toggle_filter_html" href="#" data-word="{$word_info->word}">{$word_info->filter_html}</a></td>
 					<td><!--@if($word_info->latest_hit)-->{zdate($word_info->latest_hit,'Y-m-d H:i')}<!--@else-->-<!--@end--></td>
 					<td>{$word_info->hit}</td>

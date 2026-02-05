@@ -141,7 +141,7 @@ class SpamfilterModel extends Spamfilter
 
 				if (strpos($custom_message, '%s') !== false)
 				{
-					$custom_message = sprintf($custom_message, escape($hit, false));
+					$custom_message = sprintf($custom_message, substr(sha1($word), 0, 7));
 				}
 
 				return new BaseObject(-1, $custom_message);

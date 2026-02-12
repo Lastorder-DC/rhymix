@@ -600,7 +600,7 @@ class DocumentModel extends Document
 				$url = getUrl('','module','admin','act','dispDocumentAdminList','search_target','ipaddress','search_keyword',$oDocument->getIpAddress());
 				$oDocumentController->addDocumentPopupMenu($url,'cmd_search_by_ipaddress',$icon_path,'TraceByIpaddress');
 
-				$url = sprintf("var params = new Array(); params['ipaddress_list']='%s'; exec_xml('spamfilter', 'procSpamfilterAdminInsertDeniedIP', params, completeCallModuleAction)", $oDocument->getIpAddress());
+				$url = sprintf("var params = new Array(); params['ipaddress_list']='%s'; exec_json('spamfilter.procSpamfilterAdminInsertDeniedIP', params)", $oDocument->getIpAddress());
 				$oDocumentController->addDocumentPopupMenu($url,'cmd_add_ip_to_spamfilter','','javascript');
 			}
 		}
@@ -1566,13 +1566,13 @@ class DocumentModel extends Document
 				if($searchOpt->isExtraVars)
 				{
 					$args->sort_eid = $args->sort_index;
-					$args->sort_lang = Context::getLangType();
 					if ($searchOpt->isExtraVarsSortAsNumber ?? false)
 					{
 						$args->sort_index = 'extra_sort.sort_value';
 					}
 					else
 					{
+						$args->sort_lang = Context::getLangType();
 						$args->sort_index = 'extra_sort.value';
 					}
 				}

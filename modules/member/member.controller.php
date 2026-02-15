@@ -3149,7 +3149,7 @@ class MemberController extends Member
 	 *
 	 * @param bool $deprecated_allow_update_other
 	 */
-	function updateMember($args, $deprecated_allow_update_other = FALSE)
+	function updateMember($args, $deprecated_allow_update_other = FALSE, $manual_updated = FALSE)
 	{
 		// Call a trigger (before)
 		$output = ModuleHandler::triggerCall('member.updateMember', 'before', $args);
@@ -3175,7 +3175,7 @@ class MemberController extends Member
 		{
 			unset($args->is_admin);
 			unset($args->limit_date);
-			unset($args->description);
+			if(!$manual_updated) unset($args->description);
 			if (!$deprecated_allow_update_other)
 			{
 				unset($args->denied);
@@ -3389,7 +3389,7 @@ class MemberController extends Member
 		if(!$args->user_name) $args->user_name = $orgMemberInfo->user_name;
 		if(!$args->user_id) $args->user_id = $orgMemberInfo->user_id;
 		if(!$args->nick_name) $args->nick_name = $orgMemberInfo->nick_name;
-		if($logged_info->is_admin !== 'Y')
+		if($logged_info->is_admin !== 'Y' && !$manual_updated)
 		{
 			$args->description = $orgMemberInfo->description;
 		}

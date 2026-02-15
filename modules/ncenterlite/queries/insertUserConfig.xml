@@ -10,6 +10,7 @@
 		<column name="vote_notify" var="vote_notify" notnull="notnull" />
 		<column name="scrap_notify" var="scrap_notify" notnull="notnull" />
 		<column name="message_notify" var="message_notify" notnull="notnull" />
+		<column name="custom_notify" var="custom_notify" notnull="notnull" />
 		<column name="regdate" var="regdate" default="curdate()" />
 	</columns>
 </query>

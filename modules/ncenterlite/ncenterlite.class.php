@@ -75,11 +75,12 @@ class Ncenterlite extends ModuleObject
 		{
 			return true;
 		}
-
+		/*
 		if($oDB->isColumnExists('ncenterlite_user_set','custom_notify'))
 		{
 			return true;
 		}
+		*/
 
 		// Extra data column
 		if (!$oDB->isColumnExists('ncenterlite_notify', 'data'))
@@ -165,11 +166,12 @@ class Ncenterlite extends ModuleObject
 		{
 			$oDB->dropColumn('ncenterlite_user_set', 'admin_content_notify');
 		}
-
+		/*
 		if($oDB->isColumnExists('ncenterlite_user_set','custom_notify'))
 		{
 			$oDB->dropColumn('ncenterlite_user_set', 'custom_notify');
 		}
+		*/
 
 		// Composite index to speed up getNotifyList
 		if(!$oDB->isIndexExists('ncenterlite_notify', 'idx_member_srl_and_readed'))

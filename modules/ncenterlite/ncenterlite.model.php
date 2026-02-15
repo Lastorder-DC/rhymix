@@ -123,6 +123,7 @@ class NcenterliteModel extends Ncenterlite
 			'vote' => 0,
 			'scrap' => 0,
 			'message' => 0,
+			'custom' => 0,
 		);
 	}
 

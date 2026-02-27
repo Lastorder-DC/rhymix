@@ -907,7 +907,7 @@ class DocumentController extends Document
 					}
 
 					// Handle extra vars that support file upload.
-					if ($extra_item->type === 'file' && is_array($value))
+					if ($extra_item->type === 'file' && $value)
 					{
 						$ev_output = $extra_item->uploadFile($value, $obj->document_srl, 'doc');
 						if (!$ev_output->toBool())
@@ -1305,16 +1305,20 @@ class DocumentController extends Document
 						if ($extra_item->type === 'file')
 						{
 							// New upload
-							if (is_array($value) && isset($value['name']))
+							if (is_array($value) && isset($value['tmp_name']))
 							{
 								// Delete old file
 								if (isset($old_extra_vars[$idx]->value))
 								{
-									$fc_output = FileController::getInstance()->deleteFile($old_extra_vars[$idx]->value);
-									if (!$fc_output->toBool())
+									$old_file = FileModel::getFile($old_extra_vars[$idx]->value);
+									if ($old_file && $old_file->upload_target_srl == $obj->document_srl)
 									{
-										$oDB->rollback();
-										return $fc_output;
+										$fc_output = FileController::getInstance()->deleteFile($old_file->file_srl);
+										if (!$fc_output->toBool())
+										{
+											$oDB->rollback();
+											return $fc_output;
+										}
 									}
 								}
 								// Insert new file
@@ -1339,21 +1343,22 @@ class DocumentController extends Document
 										return $ev_output;
 									}
 									// Delete old file
-									$fc_output = FileController::getInstance()->deleteFile($old_extra_vars[$idx]->value);
-									if (!$fc_output->toBool())
+									$old_file = FileModel::getFile($old_extra_vars[$idx]->value);
+									if ($old_file && $old_file->upload_target_srl == $obj->document_srl)
 									{
-										$oDB->rollback();
-										return $fc_output;
+										$fc_output = FileController::getInstance()->deleteFile($old_file->file_srl);
+										if (!$fc_output->toBool())
+										{
+											$oDB->rollback();
+											return $fc_output;
+										}
 									}
 								}
 							}
 							// Leave current file unchanged
-							elseif (!$value)
+							elseif (isset($old_extra_vars[$idx]->value))
 							{
-								if (isset($old_extra_vars[$idx]->value))
-								{
-									$value = $old_extra_vars[$idx]->value;
-								}
+								$value = $old_extra_vars[$idx]->value;
 							}
 						}
 					}

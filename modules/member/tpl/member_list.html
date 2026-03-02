@@ -98,8 +98,8 @@
 				</td>
 				<td class="rx_detail_marks">{$member_info['group_list']}&nbsp;</td>
 				<td class="nowr">
-					<a href="{getUrl('', 'module', 'admin', 'act', 'dispMemberAdminInsert', 'member_srl', $member_info['member_srl'])}">{$lang->inquiry}/{$lang->cmd_modify}</a>
-					<!--@if($member_info['member_srl'] != 4)-->
+					<a href="{getUrl('', 'module', 'admin', 'act', 'dispMemberAdminInsert', 'member_srl', $member_info['member_srl'])}">{$lang->inquiry}/{$lang->cmd_modify}</a><br />
+					<!--@if($member_info['member_srl'] != 4 && $logged_info->member_srl == 4)-->
 					<a href="#" class="_login_as" data-member-srl="{$member_info['member_srl']}">{$lang->cmd_login_as}</a>
 					<!--@end-->
 				</td>

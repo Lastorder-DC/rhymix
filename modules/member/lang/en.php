@@ -407,3 +407,6 @@ $lang->member_unauthenticated = 'Unauthenticated';
 $lang->member_number = 'Member identification number';
 $lang->msg_change_after_click = 'Change after clicking link below';
 $lang->msg_password_changed = 'Your password has been changed.';
+
+$lang->cmd_login_as = 'Login as this member';
+$lang->msg_confirm_login_as = 'Are you sure you want to login as this member? Your current admin session will be terminated.';

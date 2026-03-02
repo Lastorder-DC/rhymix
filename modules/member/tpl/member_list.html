@@ -97,7 +97,12 @@
 					{zdate($member_info['last_login'], 'Y-m-d')}
 				</td>
 				<td class="rx_detail_marks">{$member_info['group_list']}&nbsp;</td>
-				<td class="nowr"><a href="{getUrl('', 'module', 'admin', 'act', 'dispMemberAdminInsert', 'member_srl', $member_info['member_srl'])}">{$lang->inquiry}/{$lang->cmd_modify}</a></td>
+				<td class="nowr">
+					<a href="{getUrl('', 'module', 'admin', 'act', 'dispMemberAdminInsert', 'member_srl', $member_info['member_srl'])}">{$lang->inquiry}/{$lang->cmd_modify}</a>
+					<!--@if($member_info['is_admin'] != 'Y')-->
+					<a href="#" class="_login_as" data-member-srl="{$member_info['member_srl']}">{$lang->cmd_login_as}</a>
+					<!--@end-->
+				</td>
 				{@$used_values = ''}
 				<!--@foreach($usedIdentifiers as $name=>$title)-->
 					{@$used_values .= "\t".$member_info[$name]}
@@ -245,5 +250,19 @@ jQuery(function($){
 			}
 		}
 	});
+	// Login as member
+	$('a._login_as').click(function(e){
+		e.preventDefault();
+		if(!confirm('{$lang->msg_confirm_login_as}')) return;
+		var member_srl = $(this).data('member-srl');
+		var $form = $('#loginAsForm');
+		$form.find('input[name=member_srl]').val(member_srl);
+		$form.submit();
+	});
 });
 </script>
+<form id="loginAsForm" action="./" method="post" style="display:none">
+	<input type="hidden" name="module" value="member" />
+	<input type="hidden" name="act" value="procMemberAdminLoginAs" />
+	<input type="hidden" name="member_srl" value="" />
+</form>

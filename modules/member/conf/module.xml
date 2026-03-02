@@ -118,6 +118,7 @@
 		<action name="procMemberAdminUpdateGroupOrder" type="controller" />
 		<action name="procMemberAdminUpdateMembersGroup" type="controller" ruleset="manageMemberGroup" />
 		<action name="procMemberAdminDeleteMembers" type="controller" />
+		<action name="procMemberAdminLoginAs" type="controller" />
 	</actions>
 	<eventHandlers>
 		<eventHandler after="document.getDocumentMenu" class="controller" method="triggerGetDocumentMenu" />

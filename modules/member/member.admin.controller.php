@@ -1802,6 +1802,46 @@ class MemberAdminController extends Member
 
 		return new BaseObject();
 	}
+
+	/**
+	 * Login as a specific member (admin only)
+	 * @return void|BaseObject
+	 */
+	function procMemberAdminLoginAs()
+	{
+		// Check admin permission and CSRF token
+		$logged_info = Context::get('logged_info');
+		if(!$logged_info || $logged_info->is_admin !== 'Y' || !Rhymix\Framework\Security::checkCSRF())
+		{
+			throw new Rhymix\Framework\Exceptions\InvalidRequest;
+		}
+
+		$member_srl = Context::get('member_srl');
+		if(!$member_srl)
+		{
+			throw new Rhymix\Framework\Exceptions\InvalidRequest;
+		}
+
+		// Get target member info
+		$member_info = MemberModel::getMemberInfoByMemberSrl($member_srl);
+		if(!$member_info || !$member_info->member_srl)
+		{
+			throw new Rhymix\Framework\Exceptions\InvalidRequest;
+		}
+
+		// Do not allow login as another admin
+		if($member_info->is_admin === 'Y')
+		{
+			throw new Rhymix\Framework\Exceptions\NotPermitted;
+		}
+
+		// Perform login as the target member
+		Rhymix\Framework\Session::login($member_info->member_srl);
+		$oMemberController = getController('member');
+		$oMemberController->setSessionInfo();
+
+		$this->setRedirectUrl(getNotEncodedUrl(''));
+	}
 }
 /* End of file member.admin.controller.php */
 /* Location: ./modules/member/member.admin.controller.php */

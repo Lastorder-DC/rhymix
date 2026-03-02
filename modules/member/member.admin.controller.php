@@ -1829,13 +1829,14 @@ class MemberAdminController extends Member
 			throw new Rhymix\Framework\Exceptions\InvalidRequest;
 		}
 
-		// Do not allow login as another admin
-		if($member_info->is_admin === 'Y')
+		// Do not allow login as the super admin (member_srl = 4)
+		if(intval($member_info->member_srl) === 4)
 		{
 			throw new Rhymix\Framework\Exceptions\NotPermitted;
 		}
 
 		// Perform login as the target member
+		// Session::login() sets the basic session variables, and setSessionInfo() populates Context with member details
 		Rhymix\Framework\Session::login($member_info->member_srl);
 		$oMemberController = getController('member');
 		$oMemberController->setSessionInfo();
